@@ -1,0 +1,116 @@
+/* Mastery Academy — Arabic faces.
+   Swissra is reused from the legacy export (licence still to confirm before public launch).
+   IBM Plex Sans Arabic is the bundled open-licence fallback. */
+
+@font-face {
+  font-family: "Swissra";
+  src: url("/fonts/swissra-normal-regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Swissra";
+  src: url("/fonts/swissra-medium-regular.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Swissra";
+  src: url("/fonts/swissra-bold-regular.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: optional;
+}
+
+
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/Raleway-300.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/Raleway-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/Raleway-500.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/Raleway-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: optional;
+}
+@font-face {
+  font-family: "Raleway";
+  src: url("/fonts/Raleway-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: optional;
+}
+
+/* English (Latin) digits.
+   Swissra draws 0-9 as Arabic-Indic glyphs (١٢٣), and a same-family unicode-range
+   face does not reliably win the weight match. So digits get their own family that
+   sits first in every Arabic stack: the browser uses it only for 0-9 and falls
+   through to Swissra for everything else. */
+@font-face {
+  font-family: "MA Digits";
+  src: url("/fonts/Raleway-400.woff2") format("woff2");
+  font-weight: 100 449;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+@font-face {
+  font-family: "MA Digits";
+  src: url("/fonts/Raleway-500.woff2") format("woff2");
+  font-weight: 450 599;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+@font-face {
+  font-family: "MA Digits";
+  src: url("/fonts/Raleway-700.woff2") format("woff2");
+  font-weight: 600 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0030-0039;
+}
+
+/* Open-licence (OFL) Arabic fallback. Swissra's files are not committed to the
+   public repo until its licence is confirmed; a fresh clone renders with Plex. */
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "IBM Plex Sans Arabic";
+  src: url("/fonts/IBMPlexSansArabic-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
