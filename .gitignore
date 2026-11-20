@@ -26,3 +26,6 @@ dist-ssr
 # Swissra is a commercial face; licence not yet confirmed for public distribution.
 # Keep the files locally (public/fonts/) but out of the public repo.
 public/fonts/swissra-*.woff2
+
+# Wrangler local state
+.wrangler/
