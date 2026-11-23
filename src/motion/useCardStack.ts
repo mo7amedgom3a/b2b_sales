@@ -2,37 +2,27 @@ import { useEffect, useRef } from 'react'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 
 type Options = {
-  /** Viewport width (max, px) below which the cards stick and recede. */
+  /** Viewport width (max, px) below which the cards pile up. */
   breakpoint?: number
-  /** Backward tilt applied to every card except the last. */
-  rotation?: number
-  /** Scale of the first recessed card, then +scaleStep per card. */
-  scaleBase?: number
-  scaleStep?: number
+  /** Vertical offset between piled card edges (px). */
+  edge?: number
 }
 
 /**
- * Small screens only: the reference "stacked cards" look (Framer/GSAP), built
- * on **sticky** wrappers instead of ScrollTrigger pinning.
+ * Small screens only: vertical "stacked cards" animation.
  *
- * Every card sticks under the sticky header while the next ones scroll over
- * it; as the next card arrives, the current one tilts back (`rotationX`, top
- * origin) and shrinks — the exact transform recipe of the reference demo.
- * Sticky is used instead of `pin` because ScrollTrigger switches to
- * transform-pinning on touch devices, which cannot stack cards with
- * `pinSpacing: false`.
+ * Each card sticks under the header at a slightly lower top than the previous
+ * one (`--stack-index`), so the pile shows a thin edge of every card. As a card
+ * scrolls in, it rises into place from below with a small alternating tilt
+ * (GSAP scrub) and then settles under the next one. This replaces the earlier
+ * tilt-back recession with a distinct rise-and-pile motion.
  *
  * Pass a ref to the element whose *direct children* are the card wrappers; the
  * card that gets transformed is the first element inside `.stack__card`.
  *
  * Desktop, reduced motion or a failed import leave the plain list untouched.
  */
-export function useCardStack<T extends HTMLElement>({
-  breakpoint = 767,
-  rotation = -10,
-  scaleBase = 0.9,
-  scaleStep = 0.025,
-}: Options = {}) {
+export function useCardStack<T extends HTMLElement>({ breakpoint = 767, edge = 12 }: Options = {}) {
   const ref = useRef<T>(null)
   const reduce = usePrefersReducedMotion()
 
@@ -62,28 +52,27 @@ export function useCardStack<T extends HTMLElement>({
         if (wrappers.length < 2) return
 
         node.classList.add('is-stacked')
+        node.style.setProperty('--stack-edge', `${edge}px`)
 
         wrappers.forEach((wrapper, index) => {
-          if (index === wrappers.length - 1) return
+          wrapper.style.setProperty('--stack-index', String(index))
           const card = (wrapper.querySelector<HTMLElement>('.stack__card > *') ??
             wrapper.firstElementChild ??
             wrapper) as HTMLElement
-          const next = wrappers[index + 1]
-          if (!next) return
+          const direction = index % 2 === 0 ? 1 : -1
 
           gsap.fromTo(
             card,
-            { scale: 1, rotationX: 0 },
+            { y: 56, rotate: 1.8 * direction, scale: 0.975, transformOrigin: 'center bottom' },
             {
-              scale: scaleBase + scaleStep * index,
-              rotationX: rotation,
-              transformOrigin: 'top center',
-              transformPerspective: 900,
+              y: 0,
+              rotate: 0,
+              scale: 1,
               ease: 'none',
               scrollTrigger: {
-                trigger: next,
-                start: 'top 88%',
-                end: 'top 30%',
+                trigger: wrapper,
+                start: 'top 96%',
+                end: 'top 38%',
                 scrub: true,
                 invalidateOnRefresh: true,
               },
@@ -106,6 +95,8 @@ export function useCardStack<T extends HTMLElement>({
           disposed = true
           window.cancelAnimationFrame(raf)
           window.removeEventListener('load', onLoad)
+          wrappers.forEach((wrapper) => wrapper.style.removeProperty('--stack-index'))
+          node.style.removeProperty('--stack-edge')
           node.classList.remove('is-stacked')
         }
       })
@@ -121,7 +112,7 @@ export function useCardStack<T extends HTMLElement>({
       cancelled = true
       cleanup()
     }
-  }, [breakpoint, rotation, scaleBase, scaleStep, reduce])
+  }, [breakpoint, edge, reduce])
 
   return ref
 }

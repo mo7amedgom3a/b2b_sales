@@ -60,7 +60,7 @@ export function Nav() {
           <span className="nav__b2b">الأعمال</span>
         </a>
 
-        <nav aria-label="التنقل الرئيسي">
+        <nav className="nav__nav" aria-label="التنقل الرئيسي">
           <ul className="ma-nav__links nav__links">
             {navLinks.map((link) => {
               const Icon = linkIcons[link.href as keyof typeof linkIcons] ?? Route
@@ -98,6 +98,7 @@ export function Nav() {
               </AnimateIcon>
             )}
           </button>
+          <span className="nav__sep" aria-hidden="true" />
           <a className="ma-btn ma-btn--primary ma-btn--sm nav__cta" href="#booking">
             احجز جلسة تشخيص
           </a>
