@@ -1,4 +1,13 @@
-import { Hourglass, Percent, PhoneMissed, Shuffle } from 'lucide-react'
+import {
+  Camera,
+  Hourglass,
+  Lightbulb,
+  MapPin,
+  Percent,
+  PhoneMissed,
+  Shuffle,
+  TrendingDown,
+} from 'lucide-react'
 import { problem } from '../content/ar'
 import { useCardStack } from '../motion/useCardStack'
 import { Reveal } from '../motion/Reveal'
@@ -13,13 +22,14 @@ export function Problem() {
   return (
     <section className="section section--band problem" id="problem">
       <div className="ma-container">
-        <SecHead index="03" title={problem.title} lead={problem.body} />
+        <SecHead index="03" title={problem.title} lead={problem.body} icon={TrendingDown} />
 
         <div className="problem__layout">
           <Reveal className="problem__visual">
             <div className="problem__visual-inner">
-              <Tag tone="coral">من الميدان</Tag>
+              <Tag tone="coral" icon={<MapPin aria-hidden="true" />}>من الميدان</Tag>
               <img
+                data-fx="parallax"
                 src="/assets/hero/hero-sales-team.webp"
                 alt="فريق مبيعات سعودي في بيئة عمل"
                 loading="lazy"
@@ -27,6 +37,7 @@ export function Problem() {
                 height="317"
               />
               <p className="problem__visual-caption">
+                <Camera aria-hidden="true" />
                 188 دورة · +20 خبيراً · +7 قطاعات — كلها في خدمة المحادثة التي تُغلق الصفقة.
               </p>
             </div>
@@ -55,6 +66,7 @@ export function Problem() {
 
         <Reveal delay={0.08}>
           <p className="problem__transition">
+            <Lightbulb className="problem__transition-icon" aria-hidden="true" />
             {problem.transition.split('وهذا بالضبط')[0]}
             <b>وهذا بالضبط ما تبنيه ماستري لفريقك.</b>
           </p>

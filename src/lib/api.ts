@@ -96,3 +96,102 @@ export function fetchSalesProductCards(limit = 12): Promise<ApiProductCardPage> 
   })
   return getJson<ApiProductCardPage>(`/api/v1/catalog/cards?${params}`)
 }
+
+export type ApiSearchHit = {
+  id: string
+  slug: string
+  title: string
+  image: string | null
+  duration_minutes: number | null
+  instructors: string[]
+  categories: string[]
+  product_type: string | null
+}
+
+export type ApiSearchPage = {
+  items: ApiSearchHit[]
+  total: number
+}
+
+/** Full-text course search (relevance order). Instructors come back as names only. */
+export function searchCourses(q: string, limit = 4): Promise<ApiSearchPage> {
+  const params = new URLSearchParams({ q, product_type: 'course', limit: String(limit) })
+  return getJson<ApiSearchPage>(`/api/v1/search?${params}`)
+}
+
+/** Catalog cards for specific slugs — adds course art, instructor avatar and lesson count. */
+export function fetchCardsBySlugs(slugs: readonly string[]): Promise<ApiProductCardPage> {
+  const params = new URLSearchParams({ limit: String(Math.max(1, slugs.length)) })
+  slugs.forEach((slug) => params.append('slug', slug))
+  return getJson<ApiProductCardPage>(`/api/v1/catalog/cards?${params}`)
+}
+
+/* ---------------------------------------------------------------- B2B library */
+
+export type ApiB2BCategoryRef = { category_id: number; name: string; code: string }
+
+export type ApiB2BTrainer = {
+  trainer_id: number
+  name: string
+  avatar_url: string | null
+  expert_key: string | null
+}
+
+export type ApiB2BProgram = {
+  program_id: string
+  kind: 'program' | 'course'
+  title: string
+  slug: string | null
+  short_description: string | null
+  image_url: string | null
+  is_diploma: boolean
+  lesson_count: number
+  duration_seconds: number | null
+  category: ApiB2BCategoryRef | null
+  categories: ApiB2BCategoryRef[]
+  trainers: ApiB2BTrainer[]
+}
+
+export type ApiB2BProgramPage = {
+  items: ApiB2BProgram[]
+  total: number
+  limit: number
+  offset: number
+}
+
+export type ApiB2BTrack = {
+  key: string
+  name: string
+  description: string
+  category_ids: number[]
+  categories: ApiB2BCategoryRef[]
+  program_count: number
+}
+
+export type B2BCoursesQuery = {
+  /** Curated category group from `/b2b/tracks`, e.g. `sales-growth`. */
+  track?: string
+  /** Extra legacy category ids, combined with the track. */
+  categoryIds?: readonly number[]
+  /** `any`: in at least one category (default); `all`: in every one. */
+  match?: 'any' | 'all'
+  q?: string
+  limit?: number
+  offset?: number
+}
+
+/** B2B library programs, filterable by combined categories (track ∪ ids). */
+export function fetchB2BCourses(query: B2BCoursesQuery = {}): Promise<ApiB2BProgramPage> {
+  const params = new URLSearchParams({ limit: String(query.limit ?? 8) })
+  if (query.offset) params.set('offset', String(query.offset))
+  if (query.track) params.set('track', query.track)
+  query.categoryIds?.forEach((id) => params.append('category_id', String(id)))
+  if (query.match && query.match !== 'any') params.set('match', query.match)
+  if (query.q?.trim()) params.set('q', query.q.trim())
+  return getJson<ApiB2BProgramPage>(`/api/v1/b2b/courses?${params}`)
+}
+
+/** Curated groups of training fields with their live program counts. */
+export function fetchB2BTracks(): Promise<{ items: ApiB2BTrack[] }> {
+  return getJson<{ items: ApiB2BTrack[] }>('/api/v1/b2b/tracks')
+}

@@ -46597,6 +46597,537 @@
           }
         }
       }
+    },
+    "/api/v1/b2b/overview": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Business page overview",
+        "description": "One call for the business page and the landing business section: counters, fields,\nfeatured programs, companies, stories and services.",
+        "operationId": "get_overview_api_v1_b2b_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/courses": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "B2B library programs",
+        "operationId": "list_courses_api_v1_b2b_courses_get",
+        "parameters": [
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  },
+                  "maxItems": 13
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Legacy category id (`/b2b/categories`). Repeat to combine: `?category_id=3&category_id=27`.",
+              "title": "Category Id"
+            },
+            "description": "Legacy category id (`/b2b/categories`). Repeat to combine: `?category_id=3&category_id=27`."
+          },
+          {
+            "name": "track",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[a-z-]{2,40}$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Curated category group from `/b2b/tracks`, e.g. `sales-growth`.",
+              "title": "Track"
+            },
+            "description": "Curated category group from `/b2b/tracks`, e.g. `sales-growth`."
+          },
+          {
+            "name": "match",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "any",
+                "all"
+              ],
+              "type": "string",
+              "description": "`any`: in at least one of the categories; `all`: in every one of them.",
+              "default": "any",
+              "title": "Match"
+            },
+            "description": "`any`: in at least one of the categories; `all`: in every one of them."
+          },
+          {
+            "name": "sub_library_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "B2B academy (sub-library) id.",
+              "title": "Sub Library Id"
+            },
+            "description": "B2B academy (sub-library) id."
+          },
+          {
+            "name": "is_diploma",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only diplomas (`true`) or only courses (`false`).",
+              "title": "Is Diploma"
+            },
+            "description": "Only diplomas (`true`) or only courses (`false`)."
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "program",
+                    "course"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "`program` for a grouped course program, `course` for a standalone B2B course.",
+              "title": "Kind"
+            },
+            "description": "`program` for a grouped course program, `course` for a standalone B2B course."
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search in the program title and description.",
+              "title": "Q"
+            },
+            "description": "Search in the program title and description."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 48,
+              "minimum": 1,
+              "description": "Page size.",
+              "default": 24,
+              "title": "Limit"
+            },
+            "description": "Page size."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Items to skip.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Items to skip."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgramPageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/courses/{program_id}": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "B2B program/course detail",
+        "operationId": "get_course_api_v1_b2b_courses__program_id__get",
+        "parameters": [
+          {
+            "name": "program_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^(course|b2b)-\\d+$",
+              "description": "A `program_id` from `/b2b/courses`.",
+              "title": "Program Id"
+            },
+            "description": "A `program_id` from `/b2b/courses`."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProgramDetailOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/categories": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Training fields (departments)",
+        "description": "The business fields we train, with their program counts. These are the public answer to\n\"departments\"; a customer's own departments are private and never exposed.",
+        "operationId": "list_categories_api_v1_b2b_categories_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrainingAreaListOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/tracks": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Curated groups of training fields",
+        "description": "Named category combinations (e.g. sales + marketing + personal effectiveness) the landing\ncan filter by with `/b2b/courses?track=<key>`, with the fields and live program counts.",
+        "operationId": "list_tracks_api_v1_b2b_tracks_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackListOut"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/services": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Expert consultancies and custom programs",
+        "operationId": "list_services_api_v1_b2b_services_get",
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 24,
+              "minimum": 1,
+              "default": 8,
+              "title": "Limit"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServicesOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/companies": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Trusted companies",
+        "operationId": "list_companies_api_v1_b2b_companies_get",
+        "parameters": [
+          {
+            "name": "featured",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only companies featured on the landing page.",
+              "title": "Featured"
+            },
+            "description": "Only companies featured on the landing page."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 24,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Items to skip.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Items to skip."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyListOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/stories": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Success stories and course reviews",
+        "operationId": "list_stories_api_v1_b2b_stories_get",
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "company_case",
+                    "video_review",
+                    "graduate_review",
+                    "review"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by story type.",
+              "title": "Kind"
+            },
+            "description": "Filter by story type."
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 48,
+              "minimum": 1,
+              "description": "Page size.",
+              "default": 12,
+              "title": "Limit"
+            },
+            "description": "Page size."
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Items to skip.",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Items to skip."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoryPageOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/b2b/stats": {
+      "get": {
+        "tags": [
+          "B2B"
+        ],
+        "summary": "Landing-page counters",
+        "operationId": "list_stats_api_v1_b2b_stats_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatListOut"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -95725,6 +96256,1246 @@
         ],
         "title": "SubscriptionQuoteOut",
         "description": "What the first Stripe invoice will charge, and what renewals charge."
+      },
+      "CategoryRefOut": {
+        "properties": {
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code",
+            "description": "B2C catalog code that mirrors the legacy category, e.g. `legacy-category-20`."
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_id",
+          "name",
+          "code"
+        ],
+        "title": "CategoryRefOut"
+      },
+      "CompanyListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "CompanyListOut"
+      },
+      "CompanyOut": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "name_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name En"
+          },
+          "industry": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Industry"
+          },
+          "country": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Country"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          },
+          "website_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website Url"
+          },
+          "quote": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote"
+          },
+          "is_featured": {
+            "type": "boolean",
+            "title": "Is Featured"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id",
+          "name",
+          "name_en",
+          "industry",
+          "country",
+          "logo_url",
+          "website_url",
+          "quote",
+          "is_featured"
+        ],
+        "title": "CompanyOut"
+      },
+      "ConsultancyOut": {
+        "properties": {
+          "consultancy_id": {
+            "type": "integer",
+            "title": "Consultancy Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "sessions": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sessions"
+          },
+          "session_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Session Type"
+          },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consultancy_id",
+          "name",
+          "summary",
+          "image_url",
+          "sessions",
+          "session_type",
+          "price_amount",
+          "currency"
+        ],
+        "title": "ConsultancyOut"
+      },
+      "CustomProgramOut": {
+        "properties": {
+          "curriculum_id": {
+            "type": "integer",
+            "title": "Curriculum Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "price_amount": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price Amount"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency"
+          }
+        },
+        "type": "object",
+        "required": [
+          "curriculum_id",
+          "name",
+          "summary",
+          "image_url",
+          "price_amount",
+          "currency"
+        ],
+        "title": "CustomProgramOut"
+      },
+      "LessonOut": {
+        "properties": {
+          "record_id": {
+            "type": "integer",
+            "title": "Record Id"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "record_id",
+          "title",
+          "duration_seconds"
+        ],
+        "title": "LessonOut"
+      },
+      "OverviewOut": {
+        "properties": {
+          "library_ready": {
+            "type": "boolean",
+            "title": "Library Ready",
+            "description": "False until the B2B catalog mirror tables exist; catalog sections are then empty."
+          },
+          "content_ready": {
+            "type": "boolean",
+            "title": "Content Ready",
+            "description": "False until `migrations/20261212_b2b_showcase.sql` has been applied."
+          },
+          "stats": {
+            "items": {
+              "$ref": "#/components/schemas/StatOut"
+            },
+            "type": "array",
+            "title": "Stats"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/TrainingAreaOut"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "courses": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramOut"
+            },
+            "type": "array",
+            "title": "Courses"
+          },
+          "companies": {
+            "items": {
+              "$ref": "#/components/schemas/CompanyOut"
+            },
+            "type": "array",
+            "title": "Companies"
+          },
+          "stories": {
+            "items": {
+              "$ref": "#/components/schemas/StoryOut"
+            },
+            "type": "array",
+            "title": "Stories"
+          },
+          "services": {
+            "$ref": "#/components/schemas/ServicesOut"
+          }
+        },
+        "type": "object",
+        "required": [
+          "library_ready",
+          "content_ready",
+          "stats",
+          "categories",
+          "courses",
+          "companies",
+          "stories",
+          "services"
+        ],
+        "title": "OverviewOut"
+      },
+      "ProgramDetailOut": {
+        "properties": {
+          "program_id": {
+            "type": "string",
+            "title": "Program Id",
+            "description": "Opaque id: `course-<id>` for a program, `b2b-<id>` for a standalone B2B course."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "program",
+              "course"
+            ],
+            "title": "Kind",
+            "description": "`program` or a standalone `course`."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "short_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Description"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "is_diploma": {
+            "type": "boolean",
+            "title": "Is Diploma"
+          },
+          "lesson_count": {
+            "type": "integer",
+            "title": "Lesson Count"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Primary category (first by display order)."
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRefOut"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Every category the program belongs to.",
+            "default": []
+          },
+          "trainers": {
+            "items": {
+              "$ref": "#/components/schemas/TrainerRefOut"
+            },
+            "type": "array",
+            "title": "Trainers",
+            "description": "Up to 3 trainers (name + avatar).",
+            "default": []
+          },
+          "sub_libraries": {
+            "items": {
+              "$ref": "#/components/schemas/SubLibraryOut"
+            },
+            "type": "array",
+            "title": "Sub Libraries",
+            "default": []
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionOut"
+            },
+            "type": "array",
+            "title": "Sections"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/LessonOut"
+            },
+            "type": "array",
+            "title": "Lessons"
+          },
+          "related_programs": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramOut"
+            },
+            "type": "array",
+            "title": "Related Programs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "program_id",
+          "kind",
+          "title",
+          "slug",
+          "short_description",
+          "image_url",
+          "is_diploma",
+          "lesson_count",
+          "duration_seconds",
+          "category",
+          "updated_at",
+          "description",
+          "sections",
+          "lessons",
+          "related_programs"
+        ],
+        "title": "ProgramDetailOut"
+      },
+      "ProgramOut": {
+        "properties": {
+          "program_id": {
+            "type": "string",
+            "title": "Program Id",
+            "description": "Opaque id: `course-<id>` for a program, `b2b-<id>` for a standalone B2B course."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "program",
+              "course"
+            ],
+            "title": "Kind",
+            "description": "`program` or a standalone `course`."
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "short_description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Short Description"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "is_diploma": {
+            "type": "boolean",
+            "title": "Is Diploma"
+          },
+          "lesson_count": {
+            "type": "integer",
+            "title": "Lesson Count"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CategoryRefOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Primary category (first by display order)."
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRefOut"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Every category the program belongs to.",
+            "default": []
+          },
+          "trainers": {
+            "items": {
+              "$ref": "#/components/schemas/TrainerRefOut"
+            },
+            "type": "array",
+            "title": "Trainers",
+            "description": "Up to 3 trainers (name + avatar).",
+            "default": []
+          },
+          "sub_libraries": {
+            "items": {
+              "$ref": "#/components/schemas/SubLibraryOut"
+            },
+            "type": "array",
+            "title": "Sub Libraries",
+            "default": []
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "program_id",
+          "kind",
+          "title",
+          "slug",
+          "short_description",
+          "image_url",
+          "is_diploma",
+          "lesson_count",
+          "duration_seconds",
+          "category",
+          "updated_at"
+        ],
+        "title": "ProgramOut"
+      },
+      "ProgramPageOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ProgramOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "ProgramPageOut"
+      },
+      "SectionOut": {
+        "properties": {
+          "header": {
+            "type": "string",
+            "title": "Header"
+          },
+          "body": {
+            "type": "string",
+            "title": "Body"
+          }
+        },
+        "type": "object",
+        "required": [
+          "header",
+          "body"
+        ],
+        "title": "SectionOut"
+      },
+      "ServicesOut": {
+        "properties": {
+          "consultancies": {
+            "items": {
+              "$ref": "#/components/schemas/ConsultancyOut"
+            },
+            "type": "array",
+            "title": "Consultancies"
+          },
+          "programs": {
+            "items": {
+              "$ref": "#/components/schemas/CustomProgramOut"
+            },
+            "type": "array",
+            "title": "Programs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consultancies",
+          "programs"
+        ],
+        "title": "ServicesOut"
+      },
+      "StatListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StatOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "StatListOut"
+      },
+      "StatOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "label_en": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label En"
+          },
+          "value": {
+            "type": "integer",
+            "title": "Value"
+          },
+          "suffix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Suffix"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "static",
+              "programs",
+              "categories",
+              "companies",
+              "consultancies",
+              "lessons"
+            ],
+            "title": "Source"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "label_en",
+          "value",
+          "suffix",
+          "source"
+        ],
+        "title": "StatOut"
+      },
+      "StoryCompanyOut": {
+        "properties": {
+          "company_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Company Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "logo_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "company_id",
+          "name",
+          "logo_url"
+        ],
+        "title": "StoryCompanyOut"
+      },
+      "StoryOut": {
+        "properties": {
+          "story_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Story Id"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "company_case",
+              "video_review",
+              "graduate_review",
+              "review"
+            ],
+            "title": "Kind"
+          },
+          "title": {
+            "type": "string",
+            "title": "Title"
+          },
+          "summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Summary"
+          },
+          "youtube_video_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Youtube Video Id"
+          },
+          "video_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Video Url"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          },
+          "duration_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Seconds"
+          },
+          "views_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Views Count"
+          },
+          "likes_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Likes Count"
+          },
+          "company": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StoryCompanyOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "course_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Course Title"
+          },
+          "published_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "story_id",
+          "kind",
+          "title",
+          "summary",
+          "youtube_video_id",
+          "video_url",
+          "thumbnail_url",
+          "duration_seconds",
+          "views_count",
+          "likes_count",
+          "company",
+          "course_title",
+          "published_at"
+        ],
+        "title": "StoryOut"
+      },
+      "StoryPageOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/StoryOut"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "total",
+          "limit",
+          "offset"
+        ],
+        "title": "StoryPageOut"
+      },
+      "SubLibraryOut": {
+        "properties": {
+          "sub_library_id": {
+            "type": "integer",
+            "title": "Sub Library Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sub_library_id",
+          "name"
+        ],
+        "title": "SubLibraryOut"
+      },
+      "TrackListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TrackOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "TrackListOut"
+      },
+      "TrackOut": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "description": "Pass as `/b2b/courses?track=<key>`."
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "category_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "type": "array",
+            "title": "Category Ids"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRefOut"
+            },
+            "type": "array",
+            "title": "Categories"
+          },
+          "program_count": {
+            "type": "integer",
+            "title": "Program Count",
+            "description": "Distinct programs in at least one of the track's categories."
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "description",
+          "category_ids",
+          "categories",
+          "program_count"
+        ],
+        "title": "TrackOut"
+      },
+      "TrainerRefOut": {
+        "properties": {
+          "trainer_id": {
+            "type": "integer",
+            "title": "Trainer Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url"
+          },
+          "expert_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expert Key",
+            "description": "Key for `/catalog/experts/{key}` when the trainer has a B2C profile."
+          }
+        },
+        "type": "object",
+        "required": [
+          "trainer_id",
+          "name",
+          "avatar_url"
+        ],
+        "title": "TrainerRefOut"
+      },
+      "TrainingAreaListOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TrainingAreaOut"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "title": "TrainingAreaListOut"
+      },
+      "TrainingAreaOut": {
+        "properties": {
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "image_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Image Url"
+          },
+          "program_count": {
+            "type": "integer",
+            "title": "Program Count"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "category_id",
+          "name",
+          "description",
+          "image_url",
+          "program_count",
+          "code"
+        ],
+        "title": "TrainingAreaOut"
       }
     },
     "securitySchemes": {

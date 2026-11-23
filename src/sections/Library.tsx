@@ -1,4 +1,15 @@
-import { ArrowUpLeft, BookOpen, Bot, Clock3, Landmark, Megaphone, RefreshCw, TrendingUp, UserRound } from 'lucide-react'
+import {
+  ArrowUpLeft,
+  BookOpen,
+  Bot,
+  Clock3,
+  Landmark,
+  LibraryBig,
+  Megaphone,
+  RefreshCw,
+  TrendingUp,
+  UserRound,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fallbackProducts } from '../content/products'
 import { fetchSalesProductCards, SITE_URL } from '../lib/api'
@@ -126,6 +137,7 @@ export function Library() {
     <section className="section section--band library" id="library">
       <div className="ma-container">
         <SecHead
+          icon={LibraryBig}
           index="06"
           title="من مكتبة ماستري"
           lead="مختارات حقيقية من مكتبة ماستري، تُحدّث من المنصة: دورات في البيع والتسويق والقيادة والذكاء الاصطناعي."

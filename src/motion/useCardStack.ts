@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { loadGsap } from './gsap'
 
 type Options = {
   /** Viewport width (max, px) below which the cards pile up. */
@@ -34,14 +35,8 @@ export function useCardStack<T extends HTMLElement>({ breakpoint = 767, edge = 1
     let cleanup = () => {}
 
     const run = async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import('gsap'),
-        import('gsap/ScrollTrigger'),
-      ])
+      const { gsap, ScrollTrigger } = await loadGsap()
       if (cancelled) return
-
-      gsap.registerPlugin(ScrollTrigger)
-      ScrollTrigger.config({ ignoreMobileResize: true })
 
       const mm = gsap.matchMedia()
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import { loadGsap } from './gsap'
 
 type MarqueeProps = {
   children: ReactNode
@@ -25,17 +26,44 @@ export function Marquee({ children, label, className }: MarqueeProps) {
     let cancelled = false
     let cleanup = () => {}
 
-    void import('gsap')
-      .then(({ gsap }) => {
+    void loadGsap()
+      .then(({ gsap, ScrollTrigger }) => {
         if (cancelled) return
         const root = track.parentElement
         root?.classList.add('marquee--gsap')
 
-        const loop = gsap.to(track, { xPercent: -50, duration: 50, ease: 'none', repeat: -1 })
-        const slow = () => gsap.to(loop, { timeScale: 0.15, duration: 0.6 })
-        const normal = () => gsap.to(loop, { timeScale: 1, duration: 0.6 })
+        // Shorter loop on phones so the belt doesn't feel stalled on a narrow screen.
+        const duration = window.matchMedia('(max-width: 767px)').matches ? 34 : 50
+        const loop = gsap.to(track, { xPercent: -50, duration, ease: 'none', repeat: -1 })
+        // Start deep into the infinite repeat so a reverse push never hits time 0.
+        loop.totalTime(duration * 500)
+        let hovering = false
+        const slow = () => {
+          hovering = true
+          gsap.to(loop, { timeScale: 0.15, duration: 0.6 })
+        }
+        const normal = () => {
+          hovering = false
+          gsap.to(loop, { timeScale: 1, duration: 0.6 })
+        }
         track.addEventListener('pointerenter', slow)
         track.addEventListener('pointerleave', normal)
+
+        // Scrolling gives the belt a short push in the scroll direction, then it eases back.
+        const push = ScrollTrigger.create({
+          trigger: track,
+          start: 'top bottom',
+          end: 'bottom top',
+          onUpdate: (self) => {
+            if (hovering) return
+            const boost = Math.min(Math.abs(self.getVelocity()) / 350, 4)
+            const sign = self.direction < 0 ? -1 : 1
+            gsap
+              .timeline({ overwrite: true })
+              .to(loop, { timeScale: sign * (1 + boost), duration: 0.2, ease: 'power1.out' })
+              .to(loop, { timeScale: 1, duration: 1.1, ease: 'power2.out' })
+          },
+        })
 
         let observer: IntersectionObserver | undefined
         if (typeof IntersectionObserver !== 'undefined') {
@@ -53,6 +81,7 @@ export function Marquee({ children, label, className }: MarqueeProps) {
 
         cleanup = () => {
           observer?.disconnect()
+          push.kill()
           track.removeEventListener('pointerenter', slow)
           track.removeEventListener('pointerleave', normal)
           loop.kill()

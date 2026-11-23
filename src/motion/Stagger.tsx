@@ -20,7 +20,7 @@ export function Stagger({ children, className }: { children: ReactNode; classNam
       variants={container}
       initial="hidden"
       whileInView="show"
-      viewport={{ once: true, amount: 0.12 }}
+      viewport={{ once: false, amount: 0.12, margin: '0px 0px -6% 0px' }}
     >
       {children}
     </motion.div>

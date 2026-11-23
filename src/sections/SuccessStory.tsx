@@ -1,33 +1,60 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { story } from '../content/ar'
 import { Reveal } from '../motion/Reveal'
 import { Button } from '../ui/Button'
-import { Play } from 'lucide-react'
+import {
+  ArrowLeft,
+  MessagesSquare,
+  Play,
+  Quote,
+  SearchCheck,
+  TrendingUp,
+  TriangleAlert,
+  Trophy,
+  Wrench,
+} from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { SecHead } from '../ui/SecHead'
 import { Tag } from '../ui/Tag'
 import { Todo } from '../ui/Todo'
-import { VideoDialog } from '../ui/VideoDialog'
+import { InlineVideo } from '../ui/InlineVideo'
 
 export function SuccessStory() {
-  const [open, setOpen] = useState(false)
+  const [playing, setPlaying] = useState(false)
+  const frameRef = useRef<HTMLDivElement>(null)
+
+  // The side button starts the video in place and brings the frame into view.
+  const play = () => {
+    setPlaying(true)
+    frameRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   return (
     <section className="section story" id="stories">
       <div className="ma-container">
-        <SecHead index="09" title={story.title} lead={story.challenge} />
+        <SecHead index="09" title={story.title} lead={story.challenge} icon={Trophy} />
 
         <div className="story__grid">
           <Reveal>
             <div className="gap-table">
               <div className="gap-row gap-row--head">
-                <span>الفجوة التي كشفها التشخيص</span>
-                <span>الحل</span>
+                <span>
+                  <SearchCheck aria-hidden="true" /> الفجوة التي كشفها التشخيص
+                </span>
+                <span>
+                  <Wrench aria-hidden="true" /> الحل
+                </span>
               </div>
               {story.rows.map(([gap, solution]) => (
-                <div className="gap-row" key={gap}>
-                  <span className="gap-row__gap">{gap}</span>
-                  <span className="gap-row__solution">{solution}</span>
+                <div className="gap-row" key={gap} data-fx="rise">
+                  <span className="gap-row__gap">
+                    <TriangleAlert aria-hidden="true" />
+                    {gap}
+                  </span>
+                  <span className="gap-row__solution">
+                    <ArrowLeft className="gap-row__arrow" aria-hidden="true" />
+                    {solution}
+                  </span>
                 </div>
               ))}
             </div>
@@ -36,10 +63,12 @@ export function SuccessStory() {
           <Reveal delay={0.08}>
             <div className="story-results">
               <div>
-                <p className="story-results__label">النتيجة — خلال 6 أشهر</p>
+                <p className="story-results__label">
+                  <TrendingUp aria-hidden="true" /> النتيجة — خلال 6 أشهر
+                </p>
               </div>
               {story.results.map((result, index) => (
-                <div className="story-result" key={result.label}>
+                <div className="story-result" key={result.label} data-fx="rise">
                   <div className="story-result__value" dir={index < 2 ? 'ltr' : 'rtl'}>
                     {result.value}
                   </div>
@@ -55,20 +84,19 @@ export function SuccessStory() {
 
         <div className="story-video">
           <Reveal>
-            <div className="story-video__frame">
-              <img
-                src="/assets/testimonials/testimonial-cover.jpg"
-                alt="فريق الأصول العقارية في مقر العمل"
-                loading="lazy"
-                width="640"
-                height="400"
+            <div ref={frameRef}>
+              <InlineVideo
+                className="story-video__frame"
+                youtubeId={story.youtubeId}
+                title={story.videoTitle}
+                poster="/assets/testimonials/testimonial-cover.jpg"
+                posterAlt="فريق الأصول العقارية في مقر العمل"
+                playing={playing}
+                onPlay={play}
+                start={story.youtubeStart}
+                label={story.videoTitle}
+                fallback={story.videoNote}
               />
-              <button className="story-video__play" type="button" onClick={() => setOpen(true)}>
-                <span className="circle" aria-hidden="true">
-                  <Play aria-hidden="true" />
-                </span>
-                {story.videoTitle}
-              </button>
             </div>
           </Reveal>
 
@@ -83,7 +111,7 @@ export function SuccessStory() {
                 <Todo>الاقتباس واسم المتحدث من فيديو الأصول العقارية</Todo>
               </span>
               <div style={{ marginBlockStart: 18 }}>
-                <Button variant="soft" onClick={() => setOpen(true)}>
+                <Button variant="soft" onClick={play} disabled={playing}>
                   شاهد فيديو القصة
                   <Play size={16} aria-hidden="true" />
                 </Button>
@@ -94,13 +122,16 @@ export function SuccessStory() {
 
         <div className="testimonials">
           <div className="testimonials__head">
-            <h3>{story.testimonialsTitle}</h3>
+            <h3>
+              <MessagesSquare aria-hidden="true" />
+              {story.testimonialsTitle}
+            </h3>
           </div>
           <div className="testimonials__grid">
             {story.testimonials.map((item, index) => (
               <Reveal className={`testimonial `} key={item.name} delay={index * 0.05}>
                 <span className="testimonial__mark" aria-hidden="true">
-                  ”
+                  <Quote />
                 </span>
                 <p className="testimonial__quote">{item.quote}</p>
                 <div className="testimonial__person">
@@ -115,15 +146,6 @@ export function SuccessStory() {
           </div>
         </div>
       </div>
-
-      <VideoDialog
-        open={open}
-        onOpenChange={setOpen}
-        title={story.videoTitle}
-        youtubeId={story.youtubeId}
-        start={story.youtubeStart}
-        note={story.videoNote}
-      />
     </section>
   )
 }

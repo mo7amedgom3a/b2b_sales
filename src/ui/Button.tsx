@@ -1,5 +1,6 @@
-import type { MouseEventHandler, ReactNode } from 'react'
-import { cn } from '../lib/cx'
+import type { ComponentProps, MouseEventHandler, ReactNode } from 'react'
+import { Button as ShadButton } from '@/components/ui/button'
+import type { ButtonVariantProps } from '@/components/ui/button'
 
 type Variant = 'primary' | 'secondary' | 'soft' | 'ghost' | 'on-color' | 'on-ink'
 type Size = 'sm' | 'md' | 'lg'
@@ -17,23 +18,12 @@ type ButtonProps = {
   ariaLabel?: string
   target?: string
   rel?: string
-}
+} & Omit<ComponentProps<'a'>, 'children' | 'onClick' | 'type'>
 
-const variantClass: Record<Variant, string> = {
-  primary: 'ma-btn--primary',
-  secondary: 'ma-btn--secondary',
-  soft: 'ma-btn--soft',
-  ghost: 'ma-btn--ghost',
-  'on-color': 'ma-btn--on-color',
-  'on-ink': 'btn-on-ink',
-}
-
-const sizeClass: Record<Size, string> = {
-  sm: 'ma-btn--sm',
-  md: '',
-  lg: 'ma-btn--lg',
-}
-
+/**
+ * Page-level CTA. Thin adapter over the shadcn/ui Button: renders an anchor
+ * (asChild) when `href` is given, otherwise a native button.
+ */
 export function Button({
   children,
   variant = 'primary',
@@ -47,28 +37,38 @@ export function Button({
   ariaLabel,
   target,
   rel,
+  ...rest
 }: ButtonProps) {
-  const classes = cn('ma-btn', variantClass[variant], sizeClass[size], block && 'ma-btn--block', className)
+  const variants: ButtonVariantProps = { variant, size, block }
 
   if (href) {
     return (
-      <a
-        className={classes}
-        href={href}
-        onClick={onClick}
-        aria-label={ariaLabel}
-        aria-disabled={disabled || undefined}
-        target={target}
-        rel={rel}
-      >
-        {children}
-      </a>
+      <ShadButton asChild {...variants} className={className}>
+        <a
+          {...rest}
+          href={href}
+          onClick={onClick}
+          aria-label={ariaLabel}
+          aria-disabled={disabled || undefined}
+          target={target}
+          rel={rel}
+        >
+          {children}
+        </a>
+      </ShadButton>
     )
   }
 
   return (
-    <button className={classes} type={type} onClick={onClick} disabled={disabled} aria-label={ariaLabel}>
+    <ShadButton
+      {...variants}
+      className={className}
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={ariaLabel}
+    >
       {children}
-    </button>
+    </ShadButton>
   )
 }

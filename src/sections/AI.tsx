@@ -1,27 +1,43 @@
-import * as Tabs from '@radix-ui/react-tabs'
 import {
   BadgeCheck,
   BarChart3,
   BookOpenCheck,
   Bot,
   Check,
+  FileBarChart,
+  Gauge,
+  GraduationCap,
+  Info,
+  Keyboard,
+  ListChecks,
   MessageSquare,
   Network,
   Quote,
+  Radio,
   Sparkles,
+  Target,
   Timer,
   ShieldCheck,
   UsersRound,
   Wand2,
+  Zap,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { ai } from '../content/ar'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ai, demoPeople } from '../content/ar'
+import { formatNumber } from '../lib/format'
+import { useDemoSequence } from '../motion/useDemoSequence'
 import { useInViewAutoplay } from '../motion/useInViewAutoplay'
-import { TypewriterText } from '../motion/TypewriterText'
+import { TypewriterChars } from '../motion/TypewriterText'
 import { Reveal } from '../motion/Reveal'
 import { ChartContainer, ChartTooltip, ChartTooltipContent, kitColor } from '../ui/chart'
 import { SecHead } from '../ui/SecHead'
+import { Avatar } from '../ui/Avatar'
+import { ScrollArrows } from '../ui/ScrollArrows'
 import { Tag } from '../ui/Tag'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
@@ -34,14 +50,6 @@ const simChat = [
 const lessonChat = [
   { who: 'user', text: 'لماذا لا نرد على الاعتراض بالسعر مباشرة؟' },
   { who: 'coach', text: 'لأن السعر ليس السبب دائماً. ابدأ بسؤال يوضح تكلفة التأخير، ثم اربط القيمة بالنتيجة.' },
-] as const
-
-const mcpTop = [
-  ['أحمد العتيبي', '18.5', '92%'],
-  ['سارة القحطاني', '16.2', '84%'],
-  ['خالد الشمري', '14.8', '76%'],
-  ['ريم الدوسري', '13.1', '68%'],
-  ['عبدالله الحربي', '11.4', '54%'],
 ] as const
 
 const groupRows = [
@@ -68,21 +76,55 @@ const scenarioSteps = [
 
 const bulletIcons = [ShieldCheck, Timer, MessageSquare, UsersRound, BadgeCheck] as const
 
-function MockPrompt({ text, paused, live = false }: { text: string; paused: boolean; live?: boolean }) {
+type MockProps = { paused: boolean; onCycle?: () => void; onProgress?: (value: number) => void }
+
+type Sequence = ReturnType<typeof useDemoSequence>
+
+function MockPrompt({ demo }: { demo: Sequence }) {
   return (
     <div className="mock__prompt">
       <Sparkles aria-hidden="true" />
-      <TypewriterText
-        texts={[text]}
-        loop={false}
-        paused={paused}
-        holdMs={10_000}
-        jitterMs={[38, 74]}
-        live={live}
-      />
+      <TypewriterChars text={demo.text} ghosts={demo.ghosts} caret={demo.phase === 'typing'} phase={demo.typePhase} />
+      <span className="sr-only" aria-live="polite">
+        {demo.resultVisible ? demo.prompt : ''}
+      </span>
     </div>
   )
 }
+
+/** Skeleton while the prompt is typed/analysed; the answer only after. */
+function MockStage({ demo, children }: { demo: Sequence; children: ReactNode }) {
+  if (demo.resultVisible) return <div key={demo.resultKey} className="mock__answer">{children}</div>
+  return (
+    <div className={demo.phase === 'working' ? 'mock__loading is-working' : 'mock__loading'} aria-hidden="true">
+      <span className="mock__loading-label">
+        {demo.phase === 'working' ? (
+          <>
+            <span className="pulse" /> يحلّل الطلب…
+          </>
+        ) : (
+          <>
+            <Keyboard /> يكتب…
+          </>
+        )}
+      </span>
+      <Skeleton className="mock__loading-bar" />
+      <Skeleton className="mock__loading-bar" />
+      <Skeleton className="mock__loading-bar" />
+    </div>
+  )
+}
+
+function useMockSequence(prompts: readonly string[], { paused, onCycle, onProgress }: MockProps, showMs = 5200) {
+  const demo = useDemoSequence(prompts, { paused, onCycle, showMs, jitterMs: [36, 70] })
+  useEffect(() => {
+    onProgress?.(demo.progress)
+  }, [demo.progress, onProgress])
+  return demo
+}
+
+const simPrompts = ['درّب أحمد على اعتراض السعر، وسجّل تقييماً فورياً'] as const
+const lessonPrompts = ['اشرح بأمثلة من بيئة عملي في خدمة العملاء'] as const
 
 function ScoreRing({ value }: { value: number }) {
   return (
@@ -96,16 +138,20 @@ function ScoreRing({ value }: { value: number }) {
   )
 }
 
-function SimMock({ paused }: { paused: boolean }) {
+function SimMock(props: MockProps) {
+  const demo = useMockSequence(simPrompts, props, 6400)
   return (
     <div className="mock rise">
       <div className="mock__top">
-        <span>محاكاة بيع · تأمين</span>
-        <Tag tone="green">مباشر</Tag>
+        <span className="mock__brand">
+          <Bot aria-hidden="true" /> محاكاة بيع · تأمين
+        </span>
+        <Tag tone="green" icon={<Radio aria-hidden="true" />}>مباشر</Tag>
       </div>
       <div className="mock__body">
-        <MockPrompt text="درّب أحمد على اعتراض السعر، وسجّل تقييماً فورياً" paused={paused} />
+        <MockPrompt demo={demo} />
         <div className="mock__result">
+          <MockStage demo={demo}>
           <div className="res-chat rise">
             {simChat.map((line, index) => (
               <span
@@ -116,6 +162,7 @@ function SimMock({ paused }: { paused: boolean }) {
                       ? 'bubble bubble--user'
                       : 'bubble bubble--coach'
                 }
+                style={{ animationDelay: `${index * 420}ms` }}
                 key={index}
               >
                 {line.text}
@@ -128,54 +175,76 @@ function SimMock({ paused }: { paused: boolean }) {
               <b>تقييم المحاكاة</b>
               <span>تفاوض على القيمة</span>
               <div className="score__chips">
-                <Tag tone="green">وضوح القيمة</Tag>
-                <Tag tone="yellow">إغلاق</Tag>
+                <Tag tone="green" icon={<Check aria-hidden="true" />}>وضوح القيمة</Tag>
+                <Tag tone="yellow" icon={<Target aria-hidden="true" />}>إغلاق</Tag>
               </div>
             </div>
           </div>
+          </MockStage>
         </div>
       </div>
       <div className="mock__foot">
-        <span>السيناريو: اعتراض على السعر</span>
-        <span>مثال توضيحي</span>
+        <span>
+          <MessageSquare aria-hidden="true" /> السيناريو: اعتراض على السعر
+        </span>
+        <span>
+          <Info aria-hidden="true" /> مثال توضيحي
+        </span>
       </div>
     </div>
   )
 }
 
-function LessonMock({ paused }: { paused: boolean }) {
+function LessonMock(props: MockProps) {
+  const demo = useMockSequence(lessonPrompts, props, 6000)
   return (
     <div className="mock rise">
       <div className="mock__top">
-        <span>الدرس 03 · إدارة الاعتراضات</span>
-        <Tag tone="soft">كوتش الدرس</Tag>
+        <span className="mock__brand">
+          <BookOpenCheck aria-hidden="true" /> الدرس 03 · إدارة الاعتراضات
+        </span>
+        <Tag tone="soft" icon={<GraduationCap aria-hidden="true" />}>كوتش الدرس</Tag>
       </div>
       <div className="mock__body">
-        <MockPrompt text="اشرح بأمثلة من بيئة عملي في خدمة العملاء" paused={paused} />
+        <MockPrompt demo={demo} />
         <div className="mock__result">
+          <MockStage demo={demo}>
           <div className="res-chat rise">
             {lessonChat.map((line, index) => (
-              <span className={line.who === 'user' ? 'bubble bubble--user' : 'bubble bubble--coach'} key={index}>
+              <span
+                className={line.who === 'user' ? 'bubble bubble--user' : 'bubble bubble--coach'}
+                style={{ animationDelay: `${index * 420}ms` }}
+                key={index}
+              >
                 {line.text}
               </span>
             ))}
           </div>
           <div className="res-rows">
             <div className="res-row">
-              <span className="res-row__box res-row__box--done">✓</span>
+              <span className="res-row__box res-row__box--done">
+                <Check size={10} aria-hidden="true" />
+              </span>
               <span className="res-row__name">اختبر فهمك: ما أول خطوة عند اعتراض السعر؟</span>
             </div>
             <div className="res-row">
               <span className="res-row__box" />
               <span className="res-row__name">اشرح بأمثلة من بيئة عملك</span>
-              <span className="res-row__meta">2 خيارات</span>
+              <span className="res-row__meta">
+                <ListChecks size={11} aria-hidden="true" /> 2 خيارات
+              </span>
             </div>
           </div>
+          </MockStage>
         </div>
       </div>
       <div className="mock__foot">
-        <span>إجابة فورية داخل الدرس</span>
-        <span>مثال توضيحي</span>
+        <span>
+          <Zap aria-hidden="true" /> إجابة فورية داخل الدرس
+        </span>
+        <span>
+          <Info aria-hidden="true" /> مثال توضيحي
+        </span>
       </div>
     </div>
   )
@@ -212,86 +281,103 @@ function GroupsChart({ paused }: { paused: boolean }) {
   )
 }
 
-function McpMock({ paused }: { paused: boolean }) {
-  const [index, setIndex] = useState(0)
+const mcpTop = [...demoPeople].sort((a, b) => b.hours - a.hours).slice(0, 5)
 
-  useEffect(() => {
-    if (paused) return
-    const timer = window.setInterval(() => setIndex((value) => (value + 1) % mcpPrompts.length), 3900)
-    return () => window.clearInterval(timer)
-  }, [paused])
+function McpMock(props: MockProps) {
+  const demo = useMockSequence(mcpPrompts, props, 5600)
+  const index = demo.step
 
   return (
-    <div className="mock rise" key={`mcp-${index}`}>
+    <div className="mock rise">
       <div className="mock__top">
-        <span>Claude · MCP</span>
-        <Tag tone="purple">اتصال آمن</Tag>
+        <span className="mock__brand">
+          <Network aria-hidden="true" /> Claude · MCP
+        </span>
+        <Tag tone="purple" icon={<ShieldCheck aria-hidden="true" />}>اتصال آمن</Tag>
       </div>
       <div className="mock__body">
-        <MockPrompt text={mcpPrompts[index] ?? mcpPrompts[0]} paused={paused} />
+        <MockPrompt demo={demo} />
         <div className="mock__result">
-          {index === 0 ? (
-            <table className="mock__table">
-              <thead>
-                <tr>
-                  <th>موظف المبيعات</th>
-                  <th>ساعات</th>
-                  <th>إكمال</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mcpTop.map(([name, hours, completion]) => (
-                  <tr key={name}>
-                    <td>{name}</td>
-                    <td>{hours}</td>
-                    <td>{completion}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : null}
+          <MockStage demo={demo}>
+            {index === 0 ? (
+              <Table className="mock__table">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>موظف المبيعات</TableHead>
+                    <TableHead>ساعات</TableHead>
+                    <TableHead>إكمال</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mcpTop.map((person, rowIndex) => (
+                    <TableRow key={person.id} style={{ animationDelay: `${rowIndex * 70}ms` }}>
+                      <TableCell>
+                        <span className="mock__person">
+                          <Avatar initial={person.initial} tone={person.tone} size={18} />
+                          {person.name}
+                        </span>
+                      </TableCell>
+                      <TableCell dir="ltr">{formatNumber(person.hours)}</TableCell>
+                      <TableCell dir="ltr">{person.completion}%</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : null}
 
-          {index === 1 ? (
-            <div className="chart-panel">
-              <div className="chart-panel__head">
-                <span className="chart-panel__title">
-                  <BarChart3 size={12} aria-hidden="true" /> أكثر المجموعات نشاطاً — هذا الشهر
-                </span>
-                <Tag tone="soft">مثال توضيحي</Tag>
-              </div>
-              <GroupsChart paused={paused} />
-            </div>
-          ) : null}
-
-          {index === 2 ? (
-            <div className="mock__scenario rise">
-              <span className="mock__scenario-title">
-                <Wand2 aria-hidden="true" />
-                محاكاة: تفاوض تجديد العقد
-              </span>
-              <div className="mock__chips">
-                <span className="mock__chip">الهدف: الحفاظ على الهامش</span>
-                <span className="mock__chip">الدور: موظف مبيعات × عميل متردد</span>
-                <span className="mock__chip">المستوى: متقدم</span>
-              </div>
-              <div className="mock__steps">
-                {scenarioSteps.map((step, stepIndex) => (
-                  <span className="mock__step" key={step}>
-                    <span className="mock__step-num">{stepIndex + 1}</span>
-                    {step}
+            {index === 1 ? (
+              <div className="chart-panel">
+                <div className="chart-panel__head">
+                  <span className="chart-panel__title">
+                    <BarChart3 size={12} aria-hidden="true" /> أكثر المجموعات نشاطاً — هذا الشهر
                   </span>
-                ))}
+                  <Tag tone="soft" icon={<Info aria-hidden="true" />}>مثال توضيحي</Tag>
+                </div>
+                <GroupsChart paused={props.paused} />
               </div>
-              <span className="mock__ready">
-                <Check aria-hidden="true" /> جاهز خلال ثوانٍ — يمكن إسناده للمجموعة
-              </span>
-            </div>
-          ) : null}
+            ) : null}
+
+            {index === 2 ? (
+              <div className="mock__scenario rise">
+                <span className="mock__scenario-title">
+                  <Wand2 aria-hidden="true" />
+                  محاكاة: تفاوض تجديد العقد
+                </span>
+                <div className="mock__chips">
+                  <span className="mock__chip">
+                    <Target aria-hidden="true" /> الهدف: الحفاظ على الهامش
+                  </span>
+                  <span className="mock__chip">
+                    <UsersRound aria-hidden="true" /> الدور: موظف مبيعات × عميل متردد
+                  </span>
+                  <span className="mock__chip">
+                    <Gauge aria-hidden="true" /> المستوى: متقدم
+                  </span>
+                </div>
+                <div className="mock__steps">
+                  {scenarioSteps.map((step, stepIndex) => (
+                    <span className="mock__step" key={step} style={{ animationDelay: `${stepIndex * 140}ms` }}>
+                      <span className="mock__step-num">{stepIndex + 1}</span>
+                      {step}
+                    </span>
+                  ))}
+                </div>
+                <span className="mock__ready">
+                  <Check aria-hidden="true" /> جاهز خلال ثوانٍ — يمكن إسناده للمجموعة
+                </span>
+              </div>
+            ) : null}
+          </MockStage>
         </div>
       </div>
       <div className="mock__foot">
-        <span>{index === 1 ? 'تقرير جماعي جاهز للقراءة' : index === 2 ? 'سيناريو مبني على تحديك' : 'تقرير جاهز خلال ثوانٍ'}</span>
-        <span>مثال توضيحي</span>
+        <span>
+          <FileBarChart aria-hidden="true" />
+          {index === 1 ? 'تقرير جماعي جاهز للقراءة' : index === 2 ? 'سيناريو مبني على تحديك' : 'تقرير جاهز خلال ثوانٍ'}
+        </span>
+        <span>
+          <Info aria-hidden="true" /> مثال توضيحي
+        </span>
       </div>
     </div>
   )
@@ -302,56 +388,70 @@ const tabIcons = { sim: Bot, lesson: BookOpenCheck, mcp: Network } as const
 export function AI() {
   const reduce = useReducedMotion()
   const [value, setValue] = useState('sim')
-  const [auto, setAuto] = useState(true)
+  const [progress, setProgress] = useState(0)
   const { ref, paused } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.3 })
+  const tabsRef = useRef<HTMLDivElement>(null)
 
+  // On narrow screens keep the active tab scrolled into view as the tabs rotate.
   useEffect(() => {
-    if (reduce || !auto || paused) return
-    const timer = window.setInterval(() => {
-      setValue((current) => {
-        const index = ai.tabs.findIndex((tab) => tab.id === current)
-        return ai.tabs[(index + 1) % ai.tabs.length]?.id ?? 'sim'
-      })
-    }, 12_000)
-    return () => window.clearInterval(timer)
-  }, [reduce, auto, paused])
+    const list = tabsRef.current
+    const trigger = list?.querySelector<HTMLElement>('[data-state="active"]')
+    if (!list || !trigger || list.scrollWidth <= list.clientWidth) return
+    const listBox = list.getBoundingClientRect()
+    const box = trigger.getBoundingClientRect()
+    const delta = box.left + box.width / 2 - (listBox.left + listBox.width / 2)
+    list.scrollBy({ left: delta, behavior: reduce ? 'auto' : 'smooth' })
+  }, [value, reduce])
+
+  // A tab moves on once its demo has played a full cycle, so a prompt is never cut off.
+  const nextTab = useCallback(() => {
+    if (reduce) return
+    setValue((current) => {
+      const index = ai.tabs.findIndex((tab) => tab.id === current)
+      return ai.tabs[(index + 1) % ai.tabs.length]?.id ?? 'sim'
+    })
+  }, [reduce])
 
   return (
     <section className="section ai" id="ai">
       <div className="ma-container" ref={ref}>
-        <SecHead index="07" title={ai.title} lead={ai.lead} />
+        <SecHead index="07" title={ai.title} lead={ai.lead} icon={Bot} />
 
-        <Tabs.Root
+        <Tabs
           value={value}
           dir="rtl"
           onValueChange={(next) => {
+            // A click jumps to that tab; the rotation keeps going from there.
             setValue(next)
-            setAuto(false)
           }}
         >
-          <Tabs.List className="ma-tabs ai__tabs" aria-label="حلول الذكاء الاصطناعي">
+          <ScrollArrows scrollerRef={tabsRef} className="ai__tabs-wrap" label="حلول الذكاء الاصطناعي">
+          <TabsList ref={tabsRef} className="ai__tabs" aria-label="حلول الذكاء الاصطناعي">
             {ai.tabs.map((tab, index) => {
               const Icon = tabIcons[tab.id as keyof typeof tabIcons]
               return (
-                <Tabs.Trigger value={tab.id} className="ai-tab" key={tab.id}>
+                <TabsTrigger value={tab.id} className="ai-tab" key={tab.id}>
                   <Icon className="ai-tab__icon" aria-hidden="true" />
                   <span className="ai-tab__num">0{index + 1}</span>
                   {tab.label}
-                </Tabs.Trigger>
+                </TabsTrigger>
               )
             })}
-          </Tabs.List>
+          </TabsList>
+          </ScrollArrows>
 
           <div className="ai__progress-wrap" aria-hidden="true">
-            {auto && !reduce && !paused ? <span key={value} className="ai__progress-run" /> : null}
+            {!reduce ? (
+              <span className="ai__progress-run" style={{ transform: `scaleX(${progress})` }} />
+            ) : null}
           </div>
 
-          {ai.tabs.map((tab) => {
+          {ai.tabs.map((tab, tabIndex) => {
             const Mock = tab.id === 'sim' ? SimMock : tab.id === 'lesson' ? LessonMock : McpMock
             return (
-              <Tabs.Content value={tab.id} className="ai__panel" key={tab.id}>
+              <TabsContent value={tab.id} className="ai__panel" key={tab.id}>
                 <Reveal className="ai__copy">
-                  <Tag tone="coral">0{ai.tabs.findIndex((item) => item.id === tab.id) + 1}</Tag>
+                  <Tag tone="coral" icon={<Sparkles aria-hidden="true" />}>0{tabIndex + 1}</Tag>
                   <h3>{tab.title}</h3>
                   <p>{tab.body}</p>
                   <ul className="ai__bullets">
@@ -373,15 +473,15 @@ export function AI() {
                   ) : null}
                 </Reveal>
                 <Reveal className="ai__mock" delay={0.08}>
-                  <Mock paused={paused} />
+                  <Mock paused={paused} onCycle={nextTab} onProgress={setProgress} />
                 </Reveal>
-              </Tabs.Content>
+              </TabsContent>
             )
           })}
-        </Tabs.Root>
+        </Tabs>
 
         <p className="ai__extra">
-          <Quote size={14} aria-hidden="true" style={{ display: 'inline', marginInlineEnd: 6, color: 'var(--coral)' }} />
+          <Quote size={14} aria-hidden="true" className="ai__extra-icon" />
           {ai.extra}
         </p>
       </div>

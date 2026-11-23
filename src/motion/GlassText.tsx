@@ -2,11 +2,12 @@ import { useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useInViewOnce } from '../hooks/useInViewOnce'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
+import { loadGsap, MQ } from './gsap'
 
 /**
  * DELIBERATE KIT EXCEPTION (human request, Nov 2026):
- * section text gets a frosted-glass plate plus a one-pass sheen and a blur reveal
- * when it enters the viewport. GSAP is loaded only when a title is about to enter,
+ * section text gets a frosted-glass plate plus a sheen and a blur reveal each time
+ * it scrolls into view (lighter, blur-free slide on phones). GSAP is loaded only when a title is about to enter,
  * so the hero's initial payload stays lean. Disabled under reduced motion.
  */
 export function GlassText({ children, className }: { children: ReactNode; className?: string }) {
@@ -20,28 +21,33 @@ export function GlassText({ children, className }: { children: ReactNode; classN
     let cleanup = () => {}
 
     const run = async () => {
-      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
-        import('gsap'),
-        import('gsap/ScrollTrigger'),
-      ])
+      const { gsap, ScrollTrigger } = await loadGsap()
       if (cancelled) return
 
-      gsap.registerPlugin(ScrollTrigger)
       const el = ref.current
       if (!el) return
 
       const panel = el.querySelector<HTMLElement>('.glass-panel')
       const sheen = el.querySelector<HTMLElement>('.glass-sheen')
 
+      // Plays on enter, replays when scrolled back to, resets once it leaves below.
+      const mobile = window.matchMedia(MQ.mobile).matches
       const timeline = gsap.timeline({
-        scrollTrigger: { trigger: el, start: 'top 95%', once: true },
+        scrollTrigger: {
+          trigger: el,
+          start: 'top 95%',
+          end: 'bottom top',
+          toggleActions: 'restart none restart reset',
+        },
       })
 
       timeline
         .fromTo(
           el,
-          { x: 28, opacity: 0, filter: 'blur(10px)' },
-          { x: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, ease: 'power3.out' },
+          mobile ? { y: 14, opacity: 0 } : { x: 28, opacity: 0, filter: 'blur(10px)' },
+          mobile
+            ? { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }
+            : { x: 0, opacity: 1, filter: 'blur(0px)', duration: 0.9, ease: 'power3.out' },
         )
         .fromTo(
           panel,
@@ -56,6 +62,7 @@ export function GlassText({ children, className }: { children: ReactNode; classN
           0.12,
         )
 
+      ScrollTrigger.refresh()
       cleanup = () => {
         timeline.scrollTrigger?.kill()
         timeline.kill()

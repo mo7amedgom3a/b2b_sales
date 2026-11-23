@@ -1,82 +1,46 @@
 import {
   Check,
   Clock,
+  Columns3,
   Gauge,
   Hammer,
   HeartHandshake,
-  PenTool,
   Radio,
   RotateCcw,
-  Rocket,
+  Scale,
   SlidersHorizontal,
   Sparkles,
-  Stethoscope,
-  TrendingUp,
+  Truck,
   Users,
   Wallet,
+  Workflow,
   X,
 } from 'lucide-react'
-import { useRef } from 'react'
-import { motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import { how } from '../content/ar'
 import { useCardStack } from '../motion/useCardStack'
-import { useHorizontalPan } from '../motion/useHorizontalPan'
 import { Reveal } from '../motion/Reveal'
 import { SecHead } from '../ui/SecHead'
+import { HowOrbit } from './how/HowOrbit'
 
-const stepIcons = [Stethoscope, PenTool, Rocket, TrendingUp] as const
 const deliveryIcons = { clock: Clock, live: Radio, spark: Sparkles } as const
 const compareIcons = [Clock, SlidersHorizontal, Hammer, Users, RotateCcw, Gauge, HeartHandshake, Wallet] as const
 
 export function HowWeWork() {
-  const ref = useRef<HTMLDivElement>(null)
-  const reduce = useReducedMotion()
-  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 85%', 'end 40%'] })
-  const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 26, restDelta: 0.001 })
-  const stepsRef = useCardStack<HTMLDivElement>({ breakpoint: 767 })
   const deliveryRef = useCardStack<HTMLDivElement>({ breakpoint: 767 })
-  const compareRef = useHorizontalPan<HTMLDivElement>({ breakpoint: 899 })
 
   return (
     <section className="section how" id="how">
       <div className="ma-container">
-        <SecHead index="04" title={how.title} lead={how.lead} />
+        <SecHead index="04" title={how.title} lead={how.lead} icon={Workflow} />
 
-        <div ref={ref}>
-          <div className="how__progress" aria-hidden="true">
-            <motion.span style={{ scaleX: reduce ? 1 : scaleX }} />
-          </div>
-
-          <div className="how__steps stack" ref={stepsRef}>
-            {how.steps.map((step, index) => {
-              const Icon = stepIcons[index] ?? Stethoscope
-              return (
-                <div className="stack__item" key={step.num}>
-                  <Reveal className="stack__card" delay={Number(step.num) * 0.04}>
-                    <div className="how-step">
-                      <span className="how-step__icon">
-                        <Icon aria-hidden="true" />
-                      </span>
-                      <div className="how-step__num">{step.num}</div>
-                      <h3 className="how-step__title">{step.title}</h3>
-                      <p className="how-step__body">{step.body}</p>
-                      <p className="how-step__out">
-                        <Check aria-hidden="true" />
-                        <span>
-                          <b>المخرج:</b> {step.output}
-                        </span>
-                      </p>
-                    </div>
-                  </Reveal>
-                </div>
-              )
-            })}
-          </div>
-        </div>
+        <HowOrbit />
 
         <div className="delivery">
           <div className="delivery__head">
-            <h3>{how.deliveryTitle}</h3>
+            <h3>
+              <Truck aria-hidden="true" />
+              {how.deliveryTitle}
+            </h3>
           </div>
           <div className="delivery__grid stack" ref={deliveryRef}>
             {how.delivery.map((item, index) => {
@@ -100,39 +64,60 @@ export function HowWeWork() {
 
         <div className="compare">
           <div className="compare__head">
-            <h3>{how.compareTitle}</h3>
+            <h3>
+              <Scale aria-hidden="true" />
+              {how.compareTitle}
+            </h3>
           </div>
 
           <table className="compare__table">
             <thead>
               <tr>
-                <th scope="col">البُعد</th>
-                <th scope="col">التدريب التقليدي</th>
-                <th scope="col">مع ماستري</th>
+                <th scope="col">
+                  <Columns3 aria-hidden="true" /> البُعد
+                </th>
+                <th scope="col">
+                  <X aria-hidden="true" /> التدريب التقليدي
+                </th>
+                <th scope="col" className="compare__mastery">
+                  <Check aria-hidden="true" /> مع ماستري
+                </th>
               </tr>
             </thead>
             <tbody>
-              {how.compare.map(([label, traditional, mastery]) => (
-                <tr key={label}>
-                  <td>{label}</td>
-                  <td>{traditional}</td>
-                  <td>{mastery}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div
-            className="compare__mobile h-pan"
-            ref={compareRef}
-            role="group"
-            aria-label="مقارنة التدريب التقليدي مع ماستري — مرّر للأسفل للتنقل"
-          >
-            <div className="h-pan__track">
               {how.compare.map(([label, traditional, mastery], index) => {
                 const Icon = compareIcons[index] ?? Clock
                 return (
-                  <div className="h-pan__panel" key={label}>
+                  <tr key={label}>
+                    <td>
+                      <span className="compare__dim">
+                        <Icon aria-hidden="true" />
+                        {label}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="compare__cell compare__cell--old">
+                        <X aria-hidden="true" />
+                        {traditional}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="compare__cell compare__cell--new">
+                        <Check aria-hidden="true" />
+                        {mastery}
+                      </span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+
+          <div className="compare__mobile" role="list" aria-label="مقارنة التدريب التقليدي مع ماستري">
+              {how.compare.map(([label, traditional, mastery], index) => {
+                const Icon = compareIcons[index] ?? Clock
+                return (
+                  <div role="listitem" key={label}>
                     <div className="compare-card">
                       <h4>
                         <span className="compare-card__dim">
@@ -156,8 +141,6 @@ export function HowWeWork() {
                   </div>
                 )
               })}
-            </div>
-            <div className="h-pan__progress" aria-hidden="true" />
           </div>
         </div>
       </div>

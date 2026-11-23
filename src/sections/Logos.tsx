@@ -1,4 +1,4 @@
-import { BookOpen, Building2, GraduationCap, UsersRound } from 'lucide-react'
+import { BadgeCheck, BookOpen, Building2, GraduationCap, UsersRound } from 'lucide-react'
 import { clientLogos, stats } from '../content/ar'
 import { CountUp } from '../motion/CountUp'
 import { Marquee } from '../motion/Marquee'
@@ -17,17 +17,21 @@ export function Logos() {
       <div className="ma-container">
         <Reveal>
           <p className="logos__label">
-            شركات رائدة في التجارة والتجزئة والعقار والتأمين والتمويل والصحة اختارت ماستري لتطوير فرقها
+            <BadgeCheck aria-hidden="true" />
+            شركات تثق بماستري لتدريب فرق مبيعاتها
           </p>
+          <p className="logos__sub">التجارة والتجزئة · العقار · التأمين · التمويل · الصحة</p>
         </Reveal>
 
-        <Marquee label="شعارات عملاء ماستري">
-          {clientLogos.map((logo) => (
-            <span className="logo-tile" key={logo.name}>
-              <img src={logo.src} alt={logo.name} />
-            </span>
-          ))}
-        </Marquee>
+        <div className="logos__belt">
+          <Marquee label="شعارات عملاء ماستري">
+            {clientLogos.map((logo) => (
+              <span className="logo-tile" key={logo.name} title={logo.name}>
+                <img src={logo.src} alt={logo.name} loading="lazy" decoding="async" />
+              </span>
+            ))}
+          </Marquee>
+        </div>
 
         <div className="stats">
           {stats.map((stat, index) => {

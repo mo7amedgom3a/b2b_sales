@@ -1,8 +1,18 @@
-import { ArrowRight, BadgeCheck, Clock3, Timer, TrendingUp, UsersRound } from 'lucide-react'
+import {
+  ArrowRight,
+  BadgeCheck,
+  Clock3,
+  PlayCircle,
+  ShieldCheck,
+  Timer,
+  TrendingUp,
+  UsersRound,
+} from 'lucide-react'
 import { accreditations, hero } from '../content/ar'
 import { CountUp } from '../motion/CountUp'
 import { Button } from '../ui/Button'
 import { HeroDemo } from './hero/HeroDemo'
+import { HeroVideo } from './hero/HeroVideo'
 
 const resultIcons = [TrendingUp, Timer, UsersRound] as const
 
@@ -24,6 +34,7 @@ export function Hero() {
               <ArrowRight className="btn-arrow icon-inline" size={20} aria-hidden="true" />
             </Button>
             <Button href="#stories" variant="soft" size="lg">
+              <PlayCircle aria-hidden="true" />
               {hero.secondary}
             </Button>
           </div>
@@ -63,7 +74,9 @@ export function Hero() {
 
       <div className="hero__accreditations">
         <div className="ma-container accreditations">
-          <span className="accreditations__label">برامج معتمدة من:</span>
+          <span className="accreditations__label">
+            <ShieldCheck aria-hidden="true" /> برامج معتمدة من:
+          </span>
           {accreditations.map((item) => (
             <span className="accreditation" key={item.name} title={item.name}>
               <img src={item.src} alt={item.name} loading="lazy" width="92" height="42" />
@@ -78,6 +91,8 @@ export function Hero() {
           ))}
         </div>
       </div>
+
+      <HeroVideo />
     </section>
   )
 }

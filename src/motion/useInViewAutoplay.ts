@@ -6,13 +6,13 @@ type Options = {
 }
 
 /**
- * Pauses a demo/autoplay when it is off-screen, when the tab is hidden,
- * or when the user hovers/focuses it.
+ * Pauses a demo/autoplay only when it is off-screen or the tab is hidden.
+ * Hover and focus no longer pause it: the demo keeps playing and keeps
+ * moving to the next step while the pointer is over it.
  */
 export function useInViewAutoplay<T extends HTMLElement>({ threshold = 0.35, disabled = false }: Options = {}) {
   const ref = useRef<T>(null)
   const [inView, setInView] = useState(false)
-  const [hovered, setHovered] = useState(false)
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => {
@@ -39,17 +39,13 @@ export function useInViewAutoplay<T extends HTMLElement>({ threshold = 0.35, dis
     return () => document.removeEventListener('visibilitychange', onVisibility)
   }, [])
 
-  const paused = disabled || !inView || hovered || hidden
+  const paused = disabled || !inView || hidden
 
   return {
     ref,
     inView,
     paused,
-    hoverProps: {
-      onMouseEnter: () => setHovered(true),
-      onMouseLeave: () => setHovered(false),
-      onFocus: () => setHovered(true),
-      onBlur: () => setHovered(false),
-    },
+    /** Kept for call-site compatibility; hovering no longer pauses anything. */
+    hoverProps: {},
   }
 }

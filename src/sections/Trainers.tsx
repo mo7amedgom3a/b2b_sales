@@ -1,4 +1,14 @@
-import { BookOpen, Check, Compass, GraduationCap, Presentation, RefreshCw } from 'lucide-react'
+import {
+  BookOpen,
+  Briefcase,
+  Check,
+  Compass,
+  GraduationCap,
+  Presentation,
+  RefreshCw,
+  Tag as TagIcon,
+  UserRoundCheck,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useInViewOnce } from '../hooks/useInViewOnce'
 import { trainers } from '../content/ar'
@@ -38,7 +48,7 @@ export function Trainers() {
   return (
     <section ref={ref} className="section section--band trainers" id="trainers">
       <div className="ma-container">
-        <SecHead index="10" title={trainers.title} lead={trainers.lead} />
+        <SecHead index="10" title={trainers.title} lead={trainers.lead} icon={GraduationCap} />
 
         <div className="trainers__source">
           <Tag tone="soft" className="library__live">
@@ -59,11 +69,16 @@ export function Trainers() {
               />
               <div className="trainer__body">
                 <div className="trainer__name">{person.name}</div>
-                <div className="trainer__role">{person.role}</div>
+                <div className="trainer__role">
+                  <Briefcase aria-hidden="true" />
+                  {person.role}
+                </div>
                 <div className="trainer__tag">
-                  <span className="ma-tag ma-tag--soft">مدرب</span>
+                  <Tag tone="soft" icon={<UserRoundCheck aria-hidden="true" />}>مدرب</Tag>
                   {person.category ? (
-                    <Tag tone={tones[index % tones.length] ?? 'coral'}>{person.category}</Tag>
+                    <Tag tone={tones[index % tones.length] ?? 'coral'} icon={<TagIcon aria-hidden="true" />}>
+                      {person.category}
+                    </Tag>
                   ) : null}
                 </div>
                 {person.courses && person.courses > 0 ? (
@@ -81,7 +96,7 @@ export function Trainers() {
           {trainers.criteria.map((criterion, index) => {
             const CriterionIcon = criteriaIcons[index] ?? Check
             return (
-              <span key={criterion}>
+              <span key={criterion} data-fx="rise">
                 <CriterionIcon aria-hidden="true" />
                 {criterion}
               </span>

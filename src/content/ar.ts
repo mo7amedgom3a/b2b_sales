@@ -10,7 +10,6 @@ export const site = {
 
 export const navLinks = [
   { label: 'المسارات', href: '#paths' },
-  { label: 'المكتبة', href: '#library' },
   { label: 'الذكاء الاصطناعي', href: '#ai' },
   { label: 'قصص النجاح', href: '#stories' },
   { label: 'الباقات', href: '#pricing' },
@@ -61,6 +60,21 @@ export const heroDemoSteps = [
 ] as const
 
 export type HeroDemoKind = (typeof heroDemoSteps)[number]['kind']
+
+/**
+ * One illustrative team shared by every demo (hero dashboard, AI/MCP table,
+ * reports dashboard) so the same question always returns the same numbers.
+ * `values` follow `reports.skills` order. Sorted by activity (hours).
+ */
+export const demoPeople = [
+  { id: 'ahmed', name: 'أحمد العتيبي', first: 'أحمد', initial: 'أ', tone: 'yellow', role: 'موظف مبيعات ميداني', hours: 18.5, completion: 92, score: 82, values: [78, 74, 62, 71, 55] },
+  { id: 'sara', name: 'سارة القحطاني', first: 'سارة', initial: 'س', tone: 'sky', role: 'موظفة خدمة عملاء', hours: 16.2, completion: 84, score: 79, values: [82, 66, 58, 64, 76] },
+  { id: 'khaled', name: 'خالد الشمري', first: 'خالد', initial: 'خ', tone: 'lilac', role: 'مشرف مبيعات', hours: 14.8, completion: 76, score: 71, values: [58, 61, 74, 49, 68] },
+  { id: 'reem', name: 'ريم الدوسري', first: 'ريم', initial: 'ر', tone: 'green', role: 'موظفة مبيعات هاتفية', hours: 13.1, completion: 68, score: 74, values: [66, 72, 55, 60, 81] },
+  { id: 'abdullah', name: 'عبدالله الحربي', first: 'عبدالله', initial: 'ع', tone: 'pink', role: 'موظف مبيعات معارض', hours: 11.4, completion: 54, score: 63, values: [52, 58, 47, 56, 62] },
+] as const
+
+export type DemoPerson = (typeof demoPeople)[number]
 
 export const accreditations = [
   { name: 'المؤسسة العامة للتدريب التقني والمهني', short: 'TVTC', src: '/assets/accreditations/tvtc.png' },
@@ -140,12 +154,13 @@ export const problem = {
 
 export const video = {
   kicker: 'لماذا يبدأ الحل من البائع؟',
-  title: 'دقيقتان مع أحد خبراء ماستري',
-  line: 'دقيقتان عن نقطة الحسم التي تتجاهلها معظم الشركات.',
+  title: 'ثلاث دقائق مع خبراء ماستري',
+  line: 'ثلاث دقائق عن نقطة الحسم التي تتجاهلها معظم الشركات.',
   cta: 'شاهد الفيديو',
   youtubeId: '1xNjiL8OELY',
   poster: '/assets/video/academy-video-poster.jpg',
-  todo: 'اسم المتحدث — يُضاف مع الفيديو النهائي',
+  /** Names match `trainers.people` so the avatars come from the same expert data. */
+  speakers: ['د. ثابت حجازي', 'د. سهل مهدي'],
 } as const
 
 export const how = {
@@ -157,24 +172,52 @@ export const how = {
       title: 'تشخيص الفريق',
       body: 'نجلس مع مدير المبيعات أو خدمة العملاء أو الموارد البشرية لتحليل الأداء الحالي، ونحدد الفجوات ذات الأولوية: التنقيب، الإقناع، الاعتراضات، الإغلاق، خدمة العملاء.',
       output: 'صورة واضحة لمستوى كل مهارة.',
+      label: 'جلسة تشخيص مجانية',
+      meta: '30 دقيقة',
+      features: [
+        ['مقابلة المدير', 'أهداف المبيعات والخدمة'],
+        ['تقييم المهارات', 'التنقيب · الإقناع · الاعتراضات · الإغلاق'],
+        ['خريطة الفجوات', 'أولوية كل فجوة لكل فرد'],
+      ],
     },
     {
       num: '02',
       title: 'تصميم الخطة',
       body: 'مسار مبني على جدارات فريقك وفجواته وقطاعه والمستوى الإداري لكل فرد.',
       output: 'خطة تدريب بأهداف متفق عليها.',
+      label: 'مسار مخصص لفريقك',
+      meta: '+1000 مسار ممكن',
+      features: [
+        ['الجدارات والفجوات', 'مسار مبني على تشخيص فريقك'],
+        ['القطاع والمستوى', 'محتوى من واقع بيئة البيع'],
+        ['أهداف متفق عليها', 'مؤشرات قياس واضحة'],
+      ],
     },
     {
       num: '03',
       title: 'الإطلاق',
       body: 'إسناد المسارات للموظفين بمواعيد وتذكيرات تلقائية، مع جلسات بث مباشر ومحاكاة يومية مع كوتش AI.',
       output: 'فريق يبدأ التدريب من أول أسبوع.',
+      label: 'من أول أسبوع',
+      meta: '15 دقيقة يومياً',
+      features: [
+        ['إسناد المسارات', 'مواعيد وتذكيرات تلقائية'],
+        ['بث مباشر تفاعلي', 'جلسات مع خبراء الميدان'],
+        ['كوتش AI', 'محاكاة يومية على محادثات البيع'],
+      ],
     },
     {
       num: '04',
       title: 'المتابعة والتحسين',
       body: 'تقارير ولوحات مؤشرات لحظية، ومراجعة دورية مع مستشار التدريب لتعديل الخطة بضغطة زر.',
       output: 'قرارات تدريب مبنية على بيانات.',
+      label: 'لوحة مؤشرات لحظية',
+      meta: 'مراجعة دورية',
+      features: [
+        ['تقارير فورية', 'الحضور والشهادات وساعات التدريب'],
+        ['فجوات المهارات', 'أين يقف كل موظف في كل جدارة'],
+        ['مستشار التدريب', 'يحوّل التقرير إلى قرار بضغطة زر'],
+      ],
     },
   ],
   deliveryTitle: 'تدريب لا يوقف فريقك',
@@ -216,6 +259,10 @@ export const paths = {
       key: 'competency',
       label: 'الجدارات',
       options: ['التنقيب والتأهيل', 'المحادثات البيعية', 'إدارة الاعتراضات', 'التفاوض', 'الإغلاق', 'خدمة العملاء', 'الموارد البشرية'],
+      /** Catalog search keyword per option (same order) for the live course list. */
+      terms: ['التنقيب', 'المحادثات', 'الاعتراضات', 'التفاوض', 'الإغلاق', 'خدمة العملاء', 'الموارد البشرية'],
+      /** B2B library track (combined categories, `/api/v1/b2b/tracks`) per option (same order). */
+      tracks: ['sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'leadership-people'],
     },
     {
       key: 'gap',
@@ -238,6 +285,7 @@ export const paths = {
   example:
     'موظف مبيعات ميداني في شركة تأمين فجوته في إدارة الاعتراضات والمتابعة، يأخذ مساراً مختلفاً تماماً عن مدير مبيعات في شركة عقارية فجوته في توزيع المستهدفات وقراءة البيانات، وعن موظف خدمة عملاء فجوته في التعامل مع الشكاوى.',
   cta: 'اعرف مسار فريقك في جلسة التشخيص المجانية',
+  coursesTitle: 'دورات حقيقية من مكتبة ماستري لهذا المسار',
   builder: {
     title: 'مسار مقترح',
     note: 'يتغيّر تلقائياً — اضغط أي بُعد لتجربته',
@@ -298,22 +346,18 @@ export const reports = {
     ['الالتزام والنتائج', 'نسب الإكمال، ونتائج الاختبارات والمحاكاة، ومتوسط ساعات التدريب.'],
     ['فجوات المهارات', 'أين يقف كل موظف في كل جدارة، وما الخطوة التالية في مساره.'],
     ['إدارة المسارات', 'أنشئ مسارات وأسند الموظفين إليها بمواعيد وتذكيرات تلقائية.'],
-    ['التنبؤ بالاحتياج', 'توقّع الاحتياجات التدريبية القادمة قبل أن تتحول إلى فجوة.'],
     ['متكاملة مع أنظمتك', 'تربط مع الأنظمة التي تستخدمها شركتك.'],
   ],
   note: 'وكل ذلك يراجعه معك مستشار التدريب بشكل دوري، ليتحول التقرير إلى قرار.',
   demoLabel: 'مثال توضيحي',
-  queries: [
-    'اعرض أكثر المتدربين نشاطاً هذا الشهر',
-    'اعرض فجوات المهارات في الفريق',
-    'اعرض ملف أحمد المهاري',
+  /** Each typed query drives exactly one dashboard view (and person, for profiles). */
+  scenes: [
+    { prompt: 'اعرض أكثر 5 متدربين نشاطاً هذا الشهر', view: 'top', personId: null },
+    { prompt: 'اعرض فجوات المهارات في الفريق', view: 'gaps', personId: null },
+    { prompt: 'اعرض ملف أحمد العتيبي المهاري', view: 'profile', personId: 'ahmed' },
+    { prompt: 'اعرض ملف سارة القحطاني المهاري', view: 'profile', personId: 'sara' },
   ],
   skills: ['التنقيب', 'الإقناع', 'الاعتراضات', 'الإغلاق', 'خدمة العملاء'],
-  employees: [
-    { name: 'أحمد العتيبي', initial: 'أ', tone: 'yellow', values: [78, 74, 62, 71, 55] },
-    { name: 'سارة القحطاني', initial: 'س', tone: 'sky', values: [82, 66, 58, 64, 76] },
-    { name: 'خالد الشمري', initial: 'خ', tone: 'lilac', values: [58, 61, 74, 49, 68] },
-  ],
 } as const
 
 export const story = {
@@ -434,8 +478,8 @@ export const pricing = {
       id: 'start',
       name: 'انطلاق',
       team: '10 – 19 موظفاً',
-      price: '799',
-      monthly: '67 ريال للموظف',
+      /** Per employee per month, billed on an annual commitment. */
+      price: '67',
       save: null,
       featured: false,
       tag: null,
@@ -456,8 +500,8 @@ export const pricing = {
       id: 'growth',
       name: 'نمو',
       team: '20 – 99 موظفاً',
-      price: '599',
-      monthly: '50 ريال للموظف',
+      /** Per employee per month, billed on an annual commitment. */
+      price: '50',
       save: 'وفّر 25% مقارنة بانطلاق',
       featured: true,
       tag: 'الأكثر طلباً',
@@ -478,8 +522,8 @@ export const pricing = {
       id: 'lead',
       name: 'ريادة',
       team: '100 موظف فأعلى',
-      price: '499',
-      monthly: '42 ريال للموظف',
+      /** Per employee per month, billed on an annual commitment. */
+      price: '42',
       save: 'وفّر 17% مقارنة بنمو (38% مقارنة بانطلاق)',
       featured: false,
       tag: null,
@@ -516,7 +560,7 @@ export const pricing = {
     { label: 'كوتشينج جماعي مع خبير', values: ['—', '—', '✓'] },
     { label: 'برامج ودبلومات معتمدة من CPD', values: ['—', '—', '✓'] },
     { label: 'دعوة شركة صديقة للاستفادة من نفس الباقة والحساب التدريبي', values: ['—', '—', '✓'] },
-    { label: 'السعر للموظف سنوياً', values: ['799 ريال', '599 ريال', '499 ريال'] },
+    { label: 'السعر للموظف شهرياً (التزام سنوي)', values: ['67 ريال', '50 ريال', '42 ريال'] },
     { label: 'ما يعادل شهرياً', values: ['67 ريال للموظف', '50 ريال للموظف', '42 ريال للموظف'] },
     {
       label: 'نسبة التوفير',
@@ -574,7 +618,7 @@ export const faq = {
     },
     {
       q: 'هل تتكامل المنصة مع أنظمتنا؟',
-      a: 'نعم، تتكامل مع أي نظام تستخدمونه، مثل Lumofy وأنظمة CRM والموارد البشرية، فتصلكم بيانات التدريب داخل أنظمتكم.',
+      a: 'نعم، تتكامل مع أي نظام تستخدمونه، وأنظمة CRM والموارد البشرية، فتصلكم بيانات التدريب داخل أنظمتكم.',
     },
     {
       q: 'هل المحتوى مخصص لقطاعنا؟',

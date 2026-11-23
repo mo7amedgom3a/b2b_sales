@@ -1,6 +1,6 @@
 import NumberFlow from '@number-flow/react'
 import { useEffect, useState } from 'react'
-import { useInViewOnce } from '../hooks/useInViewOnce'
+import { useInView } from '../hooks/useInView'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 
 type CountUpProps = {
@@ -11,9 +11,9 @@ type CountUpProps = {
   label?: string
 }
 
-/** NumberFlow that starts at 0 and rolls to the value once it enters the viewport. */
+/** NumberFlow that rolls from 0 to the value each time it enters the viewport. */
 export function CountUp({ value, prefix = '', suffix = '', className, label }: CountUpProps) {
-  const { ref, inView } = useInViewOnce<HTMLSpanElement>(0.6)
+  const { ref, inView } = useInView<HTMLSpanElement>(0.6)
   const reduce = usePrefersReducedMotion()
   const [display, setDisplay] = useState(() => (reduce ? value : 0))
 

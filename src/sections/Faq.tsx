@@ -1,4 +1,5 @@
-import * as Accordion from '@radix-ui/react-accordion'
+import { CircleHelp, MessageCircleQuestion, MessagesSquare } from 'lucide-react'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { AnimateIcon, AnimatedPlus } from '../ui/animated-icons'
 import { faq, site } from '../content/ar'
 import { Reveal } from '../motion/Reveal'
@@ -23,38 +24,40 @@ export function Faq() {
       <div className="ma-container">
         <div className="faq__grid">
           <Reveal className="faq__aside">
-            <SecHead index="12" title={faq.title} />
-            <p>
+            <SecHead index="12" title={faq.title} icon={CircleHelp} />
+            <p className="faq__aside-note">
+              <MessageCircleQuestion aria-hidden="true" />
               لم تجد سؤالك؟ تحدث مع مستشار مبيعات وسنوضح لك كيف يُبنى المسار على فريقك وقطاعك.
             </p>
             <Button href={site.whatsappHref} target="_blank" rel="noopener noreferrer" variant="soft">
+              <MessagesSquare aria-hidden="true" />
               تحدث مع مستشار
             </Button>
           </Reveal>
 
           <Reveal delay={0.08}>
-            <Accordion.Root className="faq__list" type="single" collapsible defaultValue="faq-0">
+            <Accordion className="faq__list" type="single" collapsible defaultValue="faq-0">
               {faq.items.map((item, index) => (
-                <Accordion.Item className="faq-item" value={`faq-${index}`} key={item.q}>
-                  <Accordion.Header>
-                    <Accordion.Trigger className="faq-item__trigger">
-                      <span>{item.q}</span>
-                      <span className="faq-item__icon" aria-hidden="true">
-                        <AnimateIcon animateOnHover>
-                          <AnimatedPlus size={14} />
-                        </AnimateIcon>
-                      </span>
-                    </Accordion.Trigger>
-                  </Accordion.Header>
-                  <Accordion.Content className="faq-item__content">
-                    <div className="faq-item__inner">
-                      {item.a}
-                      {'todo' in item && item.todo ? <Todo>{item.todo}</Todo> : null}
-                    </div>
-                  </Accordion.Content>
-                </Accordion.Item>
+                <AccordionItem value={`faq-${index}`} key={item.q}>
+                  <AccordionTrigger
+                    indicator={
+                      <AnimateIcon animateOnHover>
+                        <AnimatedPlus size={14} />
+                      </AnimateIcon>
+                    }
+                  >
+                    <span className="faq-item__q">
+                      <CircleHelp className="faq-item__q-icon" aria-hidden="true" />
+                      {item.q}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {item.a}
+                    {'todo' in item && item.todo ? <Todo>{item.todo}</Todo> : null}
+                  </AccordionContent>
+                </AccordionItem>
               ))}
-            </Accordion.Root>
+            </Accordion>
           </Reveal>
         </div>
       </div>

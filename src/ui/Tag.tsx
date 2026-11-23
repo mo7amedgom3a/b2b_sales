@@ -1,8 +1,25 @@
 import type { ReactNode } from 'react'
-import { cn } from '../lib/cx'
+import { Badge } from '@/components/ui/badge'
+import type { BadgeVariant } from '@/components/ui/badge'
 
-type Tone = 'soft' | 'coral' | 'yellow' | 'purple' | 'sky' | 'pink' | 'teal' | 'lilac' | 'green' | 'cream' | 'ink'
+type Tone = Exclude<BadgeVariant, 'default' | 'outline'>
 
-export function Tag({ children, tone = 'soft', className }: { children: ReactNode; tone?: Tone; className?: string }) {
-  return <span className={cn('ma-tag', tone !== 'soft' && `ma-tag--${tone}`, className)}>{children}</span>
+/** Kit tag → shadcn Badge. `soft` now always gets the theme-aware fill. */
+export function Tag({
+  children,
+  tone = 'soft',
+  className,
+  icon,
+}: {
+  children: ReactNode
+  tone?: Tone
+  className?: string
+  icon?: ReactNode
+}) {
+  return (
+    <Badge variant={tone} className={className}>
+      {icon}
+      {children}
+    </Badge>
+  )
 }

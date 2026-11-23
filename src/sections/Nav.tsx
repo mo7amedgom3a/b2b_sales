@@ -6,7 +6,7 @@ import { useTheme } from '../hooks/useTheme'
 import { cn } from '../lib/cx'
 import { AnimateIcon, AnimatedMenu, AnimatedMoon, AnimatedSun, AnimatedX } from '../ui/animated-icons'
 
-const SECTION_IDS = ['paths', 'library', 'ai', 'stories', 'pricing', 'faq'] as const
+const SECTION_IDS = ['paths', 'ai', 'stories', 'pricing', 'faq'] as const
 
 const linkIcons = {
   '#paths': Route,

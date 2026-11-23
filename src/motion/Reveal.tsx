@@ -8,7 +8,10 @@ type RevealProps = {
   y?: number
 }
 
-/** One-shot scroll reveal, 22px / 0.7s, disabled under reduced motion. */
+/**
+ * Scroll reveal, 22px / 0.7s. Replays every time the block scrolls back into
+ * view (resets once it has fully left). Disabled under reduced motion.
+ */
 export function Reveal({ children, className, delay = 0, y = 22 }: RevealProps) {
   const reduce = useReducedMotion()
   if (reduce) return <div className={className}>{children}</div>
@@ -18,7 +21,7 @@ export function Reveal({ children, className, delay = 0, y = 22 }: RevealProps) 
       className={className}
       initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.18 }}
+      viewport={{ once: false, amount: 0.12, margin: '0px 0px -6% 0px' }}
       transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
     >
       {children}

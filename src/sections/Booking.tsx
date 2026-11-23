@@ -4,15 +4,16 @@ import {
   Building2,
   CalendarClock,
   Check,
+  Clock3,
   IdCard,
   Mail,
   Map,
   MessageSquareWarning,
   Package,
   Phone,
+  Route,
   User,
   Users,
-  Route,
 } from 'lucide-react'
 import { useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
@@ -153,6 +154,7 @@ export function Booking() {
             })}
           </ol>
           <p className="booking__note">
+            <Clock3 aria-hidden="true" />
             {booking.note} <Todo>24 ساعة عمل تحتاج تأكيداً</Todo>
           </p>
         </Reveal>

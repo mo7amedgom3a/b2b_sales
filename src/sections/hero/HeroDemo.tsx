@@ -1,30 +1,42 @@
 import {
-  ArrowRight,
+  Activity,
   Bot,
+  CalendarDays,
   Check,
   Flame,
   Gauge,
   GraduationCap,
+  Info,
+  Keyboard,
+  LayoutDashboard,
+  MousePointerClick,
   Radio,
+  RefreshCw,
   Route,
+  SendHorizontal,
   Sparkles,
   Stethoscope,
+  Timer,
+  UsersRound,
   Video,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { heroDemoSteps } from '../../content/ar'
+import { useRef, useState } from 'react'
+import { Skeleton } from '@/components/ui/skeleton'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
+import { demoPeople, heroDemoSteps } from '../../content/ar'
 import type { HeroDemoKind } from '../../content/ar'
-import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
 import { useDemoCourses } from '../../lib/demoCourses'
 import type { DemoCourse } from '../../lib/demoCourses'
 import { formatNumber } from '../../lib/format'
 import { useInViewAutoplay } from '../../motion/useInViewAutoplay'
 import { TypewriterChars } from '../../motion/TypewriterText'
-import { useExitGhosts, useTypewriter } from '../../motion/useTypewriter'
+import { useDemoSequence } from '../../motion/useDemoSequence'
+import { Avatar } from '../../ui/Avatar'
+import { ScrollArrows } from '../../ui/ScrollArrows'
 import { Tag } from '../../ui/Tag'
 import { AnimateIcon, AnimatedAlert, AnimatedCheck, AnimatedMinus } from '../../ui/animated-icons'
 
-type Phase = 'typing' | 'working' | 'done'
+const prompts = heroDemoSteps.map((step) => step.prompt)
 
 const stepIcons = {
   gaps: Stethoscope,
@@ -267,62 +279,55 @@ function TrainResult({ courses }: { courses: DemoCourse[] }) {
         })}
       </div>
       <div className="res-legend">
-        <span>تتحدث الخطة أسبوعياً حسب تشخيص الفريق</span>
-        <span>مثال توضيحي</span>
+        <span>
+          <RefreshCw size={11} aria-hidden="true" /> تتحدث الخطة أسبوعياً حسب تشخيص الفريق
+        </span>
+        <span>
+          <Info size={11} aria-hidden="true" /> مثال توضيحي
+        </span>
       </div>
     </div>
   )
 }
 
-const fallbackRankRows = [
-  { name: 'أحمد العتيبي', value: 92, image: null },
-  { name: 'سارة القحطاني', value: 84, image: null },
-  { name: 'خالد الشمري', value: 76, image: null },
-  { name: 'ريم الدوسري', value: 68, image: null },
-  { name: 'عبدالله الحربي', value: 54, image: null },
-] as const
-
-function toRankRows(courses: DemoCourse[]) {
-  if (courses.length < 3) return fallbackRankRows
-  const values = [92, 84, 76, 68, 54]
-  return courses.slice(0, 5).map((course, index) => ({
-    name: course.title,
-    value: values[index] ?? 50,
-    image: course.image,
-  }))
-}
-
-function DashResult({ courses }: { courses: DemoCourse[] }) {
-  const rows = toRankRows(courses)
+function DashResult() {
+  // Same team as the question: the 5 most active sales reps this month.
+  const rows = [...demoPeople].sort((a, b) => b.hours - a.hours).slice(0, 5)
   return (
     <div className="res rise">
       <div className="res__head">
-        <span className="res__title">أكثر 5 دورات إنجازاً</span>
-        <Tag tone="yellow">هذا الشهر</Tag>
+        <span className="res__title">
+          <UsersRound size={13} aria-hidden="true" /> أكثر 5 موظفي مبيعات نشاطاً
+        </span>
+        <Tag tone="yellow" icon={<CalendarDays aria-hidden="true" />}>هذا الشهر</Tag>
       </div>
       <div className="res-rank">
-        {rows.map((row, index) => (
-          <div className="res-rank__row" key={row.name}>
+        {rows.map((person, index) => (
+          <div className="res-rank__row" key={person.id} style={{ animationDelay: `${index * 80}ms` }}>
             <span className="res-rank__idx">{index + 1}</span>
             <span className="res-rank__name res-rank__name--media">
-              {row.image ? (
-                <img className="demo-thumb" src={row.image} alt="" loading="lazy" referrerPolicy="no-referrer" />
-              ) : null}
-              <span className="res-rank__label">{row.name}</span>
+              <Avatar initial={person.initial} tone={person.tone} size={20} />
+              <span className="res-rank__label">{person.name}</span>
             </span>
             <span className="res-rank__track">
               <span
                 className="res-rank__bar"
-                style={{ width: `${row.value}%`, animationDelay: `${index * 70}ms` }}
+                style={{ width: `${person.completion}%`, animationDelay: `${index * 80}ms` }}
               />
             </span>
-            <span className="res-rank__val">{row.value}%</span>
+            <span className="res-rank__val">
+              <Timer size={10} aria-hidden="true" /> {formatNumber(person.hours)} س
+            </span>
           </div>
         ))}
       </div>
       <div className="res-legend">
-        <span>إنجاز المتدربين خلال آخر 30 يوماً</span>
-        <span>مثال توضيحي</span>
+        <span>
+          <Activity size={11} aria-hidden="true" /> مرتّبون حسب ساعات التدريب خلال آخر 30 يوماً
+        </span>
+        <span>
+          <Info size={11} aria-hidden="true" /> مثال توضيحي
+        </span>
       </div>
     </div>
   )
@@ -333,78 +338,48 @@ function Result({ kind, courses }: { kind: HeroDemoKind; courses: DemoCourse[] }
   if (kind === 'path') return <PathResult courses={courses} />
   if (kind === 'training') return <TrainResult courses={courses} />
   if (kind === 'sim') return <SimResult />
-  return <DashResult courses={courses} />
+  return <DashResult />
 }
 
 export function HeroDemo() {
-  const reduce = usePrefersReducedMotion()
   const { ref, paused, hoverProps } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.4 })
-  const [step, setStep] = useState(0)
-  const [phase, setPhase] = useState<Phase>(reduce ? 'done' : 'typing')
   const [pressed, setPressed] = useState(false)
+  const pillsRef = useRef<HTMLDivElement>(null)
   const { courses, live } = useDemoCourses(6)
-
-  const current = heroDemoSteps[step] ?? heroDemoSteps[0]
-  const { text, phase: twPhase } = useTypewriter([current.prompt], {
-    loop: false,
+  const demo = useDemoSequence(prompts, {
     paused,
-    restartKey: `${step}-${current.prompt}`,
-    jitterMs: [46, 92],
-    holdMs: 10_000,
     typeMs: 58,
+    jitterMs: [46, 88],
+    workingMs: 850,
+    showMs: 4600,
   })
-  const ghosts = useExitGhosts(text)
-
-  useEffect(() => {
-    if (reduce) return
-    if (phase === 'typing' && twPhase === 'holding') {
-      const timer = window.setTimeout(() => setPhase('working'), 260)
-      return () => window.clearTimeout(timer)
-    }
-    if (phase === 'working') {
-      const timer = window.setTimeout(() => setPhase('done'), 850)
-      return () => window.clearTimeout(timer)
-    }
-    if (phase === 'done') {
-      const timer = window.setTimeout(() => {
-        setStep((value) => (value + 1) % heroDemoSteps.length)
-        setPhase('typing')
-      }, 2300)
-      return () => window.clearTimeout(timer)
-    }
-    return undefined
-  }, [phase, twPhase, reduce])
+  const current = heroDemoSteps[demo.step] ?? heroDemoSteps[0]
 
   const jumpTo = (index: number) => {
-    setStep(index)
+    demo.goTo(index)
     setPressed(true)
-    if (reduce) {
-      setPhase('done')
-      return
-    }
-    setPhase('typing')
     window.setTimeout(() => setPressed(false), 180)
   }
 
-  const isWorking = phase === 'working'
-  const isDone = phase === 'done'
-  const isTyping = phase === 'typing'
+  const isTyping = demo.phase === 'typing'
+  const isWorking = demo.phase === 'working'
 
   return (
     <div className="demo" ref={ref} {...hoverProps} aria-label="عرض تفاعلي لمنصة ماستري">
       <div className="demo__top">
         <span className="demo__brand">
-          <span className="dot" aria-hidden="true" />
+          <LayoutDashboard size={14} aria-hidden="true" />
           ماستري — لوحة التدريب
         </span>
-        <Tag tone="soft">مثال توضيحي</Tag>
+        <Tag tone="soft" icon={<Info aria-hidden="true" />}>مثال توضيحي</Tag>
       </div>
 
       <div className="demo__body">
         <div className="demo__input">
+          <Sparkles className="demo__input-icon" size={14} aria-hidden="true" />
           <span className="demo__prompt">
-            {text ? (
-              <TypewriterChars text={text} ghosts={ghosts} caret={isTyping} phase={twPhase} />
+            {demo.text ? (
+              <TypewriterChars text={demo.text} ghosts={demo.ghosts} caret={isTyping} phase={demo.typePhase} />
             ) : (
               <span className="demo__placeholder">اكتب طلبك…</span>
             )}
@@ -413,29 +388,34 @@ export function HeroDemo() {
             className={pressed ? 'demo__send is-press' : 'demo__send'}
             type="button"
             aria-label="إرسال الطلب"
-            onClick={() => jumpTo(step)}
+            onClick={() => jumpTo(demo.step)}
           >
-            <ArrowRight size={16} aria-hidden="true" />
+            <SendHorizontal size={16} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="demo__pills" role="group" aria-label="أبعاد العرض">
+        <ScrollArrows scrollerRef={pillsRef} className="demo__pills-wrap" label="أبعاد العرض">
+        <ToggleGroup
+          ref={pillsRef}
+          type="single"
+          className="demo__pills"
+          aria-label="أبعاد العرض"
+          value={String(demo.step)}
+          onValueChange={(value) => {
+            if (value) jumpTo(Number(value))
+          }}
+        >
           {heroDemoSteps.map((item, index) => {
             const Icon = stepIcons[item.kind]
             return (
-              <button
-                className="demo__pill"
-                type="button"
-                key={item.pill}
-                aria-pressed={index === step}
-                onClick={() => jumpTo(index)}
-              >
+              <ToggleGroupItem className="demo__pill" value={String(index)} key={item.pill} showCheck={false}>
                 <Icon size={13} aria-hidden="true" />
                 {item.pill}
-              </button>
+              </ToggleGroupItem>
             )
           })}
-        </div>
+        </ToggleGroup>
+        </ScrollArrows>
 
         <div className="demo__result">
           <div className="demo__status" aria-live="polite">
@@ -444,34 +424,36 @@ export function HeroDemo() {
                 <span className="pulse" aria-hidden="true" />
                 جارٍ تحليل بيانات الفريق…
               </>
-            ) : isDone ? (
+            ) : demo.resultVisible ? (
               <>
-                <span className="demo__tag" aria-hidden="true">تم</span>
+                <span className="demo__tag" aria-hidden="true">
+                  <Check size={10} /> تم
+                </span>
                 النتيجة جاهزة — {current.pill}
               </>
             ) : (
               <>
-                <Sparkles size={12} aria-hidden="true" />
-                اكتب طلباً أو اختر بُعداً من الأسفل
+                <Keyboard size={12} aria-hidden="true" />
+                يكتب الطلب…
               </>
             )}
           </div>
 
-          {isWorking ? (
-            <div className="demo__skeleton" aria-hidden="true">
-              <span className="demo__skeleton-bar" />
-              <span className="demo__skeleton-bar" />
-              <span className="demo__skeleton-bar" />
+          {demo.resultVisible ? (
+            <div key={demo.resultKey}>
+              <Result kind={current.kind} courses={courses} />
             </div>
           ) : (
-            <div key={`${step}-${isDone ? 'done' : 'preview'}`}>
-              <Result kind={current.kind} courses={courses} />
+            <div className={isWorking ? 'demo__skeleton is-working' : 'demo__skeleton'} aria-hidden="true">
+              <Skeleton className="demo__skeleton-bar" />
+              <Skeleton className="demo__skeleton-bar" />
+              <Skeleton className="demo__skeleton-bar" />
             </div>
           )}
         </div>
 
         <p className="demo__hint">
-          <Sparkles size={11} aria-hidden="true" />
+          <MousePointerClick size={11} aria-hidden="true" />
           {live ? 'دورات حقيقية من مكتبة ماستري — ' : ''}
           تفاعلي — اضغط أي بُعد لتجربته. يتوقف تلقائياً عند خروجه من الشاشة.
         </p>

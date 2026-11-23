@@ -1,4 +1,14 @@
-import { Globe2, Phone } from 'lucide-react'
+import {
+  Building2,
+  CalendarCheck,
+  ChevronLeft,
+  Copyright,
+  Globe2,
+  Headset,
+  Link2,
+  Phone,
+  ShieldCheck,
+} from 'lucide-react'
 import { accreditations, footer, navLinks, site } from '../content/ar'
 
 export function Footer() {
@@ -23,21 +33,33 @@ export function Footer() {
           </div>
 
           <div className="footer__col">
-            <h4>{footer.linksTitle}</h4>
+            <h4>
+              <Link2 aria-hidden="true" />
+              {footer.linksTitle}
+            </h4>
             <ul>
               {navLinks.map((link) => (
                 <li key={link.href}>
-                  <a href={link.href}>{link.label}</a>
+                  <a href={link.href} className="footer__link">
+                    <ChevronLeft aria-hidden="true" />
+                    {link.label}
+                  </a>
                 </li>
               ))}
               <li>
-                <a href="#booking">احجز جلسة تشخيص</a>
+                <a href="#booking" className="footer__link footer__link--cta">
+                  <CalendarCheck aria-hidden="true" />
+                  احجز جلسة تشخيص
+                </a>
               </li>
             </ul>
           </div>
 
           <div className="footer__col">
-            <h4>{footer.contactTitle}</h4>
+            <h4>
+              <Headset aria-hidden="true" />
+              {footer.contactTitle}
+            </h4>
             <ul>
               <li>
                 <a href={site.whatsappHref} target="_blank" rel="noopener noreferrer">
@@ -53,11 +75,17 @@ export function Footer() {
           </div>
 
           <div className="footer__col">
-            <h4>{footer.accrTitle}</h4>
+            <h4>
+              <ShieldCheck aria-hidden="true" />
+              {footer.accrTitle}
+            </h4>
             <ul>
               {accreditations.map((item) => (
                 <li key={item.short}>
-                  <span style={{ color: 'rgba(255,255,255,.78)', fontSize: 12 }}>{item.short}</span>
+                  <span className="footer__accr-item">
+                    <ShieldCheck aria-hidden="true" />
+                    {item.short}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -65,8 +93,12 @@ export function Footer() {
         </div>
 
         <div className="footer__bottom">
-          <span>{footer.copyright}</span>
-          <span>ماستري أكاديمي | الأعمال</span>
+          <span>
+            <Copyright aria-hidden="true" /> {footer.copyright}
+          </span>
+          <span>
+            <Building2 aria-hidden="true" /> ماستري أكاديمي | الأعمال
+          </span>
         </div>
       </div>
     </footer>

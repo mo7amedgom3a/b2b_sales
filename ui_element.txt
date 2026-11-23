@@ -1,0 +1,74 @@
+pper Section: Interactive Radial Node Graph
+The top light-gray container presents a mind-map visualization of the creator's different roles:   
+image_34b35f.jpg
+
+Central Avatar Hub: A circular portrait of a man sits at the center, framed by concentric solid and dashed circular rings.   
+image_34b35f.jpg
+
+Radial Role Nodes: Six rounded-rectangle cards orbit the central portrait, each connected to the center via thin curved lines and featuring a small circular badge with a diagonal top-left arrow (↖) on its top-left edge:   
+image_34b35f.jpg
+
+Active Node (Middle-Left): Highlighted with a pure white background, solid black border, dark connecting line, and white/black badge. It reads مبرمجًا (Programmer), تطبيقاتي (My Apps), and ٣ تطبيقات (3 apps).   
+image_34b35f.jpg
++ 1
+
+Top-Left Node (Muted): Styled in low-contrast gray, reading يوتيوبرًا (YouTuber), قناة حاتم (Hatem's Channel), and ١١٣ فيديو (113 videos).   
+image_34b35f.jpg
+
+Bottom-Left Node (Muted): Styled in low-contrast gray, reading مصورًا (Photographer), التصوير (Photography), and ١٣٩ صورة (139 photos).   
+image_34b35f.jpg
+
+Top-Right Node (Muted): Styled in low-contrast gray, reading محاورًا (Interviewer/Host), بودكاست مربع (Murabba Podcast), and ١٤٧ حلقة (147 episodes).   
+image_34b35f.jpg
+
+Middle-Right Node (Inactive Outline): Styled with a subtle gray border and muted text, reading شاعرًا (Poet), الشعر (Poetry), and ٨٥ قصيدة (85 poems).   
+image_34b35f.jpg
+
+Bottom-Right Node (Inactive Outline): Styled with a subtle gray border and muted text, reading كاتبًا (Writer), المدونة (The Blog), and ١٥١ تدوينة (151 blog posts).   
+image_34b35f.jpg
+
+2. Lower Section: Selected Category Preview Card
+The bottom light-gray horizontal container displays detailed content for the currently active مبرمجًا (Programmer) node, structured in a three-column RTL layout:   
+image_34b35f.jpg
+
+Right Column (Title & Metadata): Features the large bold heading مبرمجًا above the sub-label تطبيقاتي (My Apps), flanked on the far right by secondary metadata reading ٣ تطبيقات (3 apps) and حاتم (Hatem).   
+image_34b35f.jpg
+
+Center Column (Project List): Displays three vertically stacked app links, each preceded by a left-pointing arrow (←) and formatted as App Name • Tagline:   
+image_34b35f.jpg
+
+← أمالي • القراءة والاقتباس (Amali • Reading and quoting)   
+image_34b35f.jpg
+
+← تِقَهو • فنجان يسهر معك (Tiqahwa • A cup that stays up with you)   
+image_34b35f.jpg
+
+← مرصاد • جلسات التصوير (Mirsad • Photography sessions)   
+image_34b35f.jpg
+
+Left Column (Call-to-Action Button): A high-contrast, solid black pill button containing white text and a left arrow reading صفحة التطبيقات ← (Apps Page).   
+image_34b35f.jpg
+
+A partially cropped line of light-gray Arabic text is also visible along the very bottom edge beneath the preview card.   
+image_34b35f.jpg
+
+
+reflect with our mastery landing page 
+قرارات تدريب مبنية على بيانات… لا على انطباعات
+لوحة تحكم لإدارة التدريب ومدراء المبيعات وخدمة العملاء والموارد البشرية تعطيك صورة لحظية عن فريقك، وتجعل تعديل الخطة أو إضافة مسار جديد بضغطة زر.
+
+تقارير فورية: الحضور والشهادات وساعات التدريب لكل موظف خلال ثوانٍ.
+
+تحليل الأداء: أكثر المتدربين نشاطاً، والدورات الأعلى إنجازاً، ومن يحتاج متابعة.
+
+الالتزام والنتائج: نسب الإكمال، ونتائج الاختبارات والمحاكاة، ومتوسط ساعات التدريب.
+
+فجوات المهارات: أين يقف كل موظف في كل جدارة، وما الخطوة التالية في مساره.
+
+إدارة المسارات: أنشئ مسارات وأسند الموظفين إليها بمواعيد وتذكيرات تلقائية.
+
+التنبؤ بالاحتياج: توقّع الاحتياجات التدريبية القادمة قبل أن تتحول إلى فجوة.
+
+متكاملة مع أنظمتك: تربط مع الأنظمة التي تستخدمها شركتك.
+
+وكل ذلك يراجعه معك مستشار التدريب بشكل دوري، ليتحول التقرير إلى قرار.

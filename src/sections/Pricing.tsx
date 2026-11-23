@@ -1,4 +1,19 @@
-import { Check, Gift, Minus, Plus, Sparkles, UsersRound } from 'lucide-react'
+import {
+  CalendarCheck,
+  Check,
+  Crown,
+  Gift,
+  ListChecks,
+  MessageCircle,
+  Minus,
+  Package,
+  PiggyBank,
+  Plus,
+  PlusCircle,
+  Sparkles,
+  Star,
+  UsersRound,
+} from 'lucide-react'
 import { pricing, site } from '../content/ar'
 import { Stagger, StaggerItem } from '../motion/Stagger'
 import { Reveal } from '../motion/Reveal'
@@ -15,21 +30,30 @@ function PlanCard({ plan }: { plan: Plan }) {
     <article className={cn('plan', plan.featured && 'plan--featured')}>
       {plan.tag ? (
         <span className="plan__tag">
-          <Tag tone="coral">{plan.tag}</Tag>
+          <Tag tone="coral" icon={<Star aria-hidden="true" />}>{plan.tag}</Tag>
         </span>
       ) : null}
 
-      <div className="plan__name">{plan.name}</div>
+      <div className="plan__name">
+        {plan.featured ? <Crown aria-hidden="true" /> : <Package aria-hidden="true" />}
+        {plan.name}
+      </div>
       <div className="plan__team">
         <UsersRound className="icon-pop" aria-hidden="true" />
         {plan.team}
       </div>
 
       <div className="plan__price">
-        <span>{plan.price}</span>
-        <small>ريال / موظف سنوياً</small>
+        <span className="plan__amount" dir="ltr">
+          {plan.price}
+        </span>
+        <span className="plan__unit">ريال شهرياً للموظف</span>
       </div>
-      <div className="plan__monthly">ما يعادل {plan.monthly}</div>
+      <div className="plan__terms">
+        <Tag tone="soft" className="plan__commit" icon={<CalendarCheck aria-hidden="true" />}>
+          التزام سنوي
+        </Tag>
+      </div>
 
       <ul className="plan__features">
         {plan.features.map((feature) => (
@@ -43,7 +67,12 @@ function PlanCard({ plan }: { plan: Plan }) {
         ))}
       </ul>
 
-      {plan.save ? <span className="plan__save">{plan.save}</span> : null}
+      {plan.save ? (
+        <span className="plan__save">
+          <PiggyBank aria-hidden="true" />
+          {plan.save}
+        </span>
+      ) : null}
 
       {plan.badge ? (
         <div className="plan__badge">
@@ -60,6 +89,7 @@ function PlanCard({ plan }: { plan: Plan }) {
           variant={plan.featured ? 'primary' : 'soft'}
           block
         >
+          {plan.id === 'lead' ? <MessageCircle aria-hidden="true" /> : <CalendarCheck aria-hidden="true" />}
           {plan.cta}
         </Button>
       </div>
@@ -71,7 +101,7 @@ export function Pricing() {
   return (
     <section className="section section--band pricing" id="pricing">
       <div className="ma-container">
-        <SecHead index="11" title={pricing.title} lead={pricing.lead} />
+        <SecHead index="11" title={pricing.title} lead={pricing.lead} icon={Package} />
 
         <Stagger className="plans">
           {pricing.plans.map((plan) => (
@@ -95,7 +125,9 @@ export function Pricing() {
         <div className="matrix">
           <details className="matrix__details">
             <summary className="matrix__summary">
-              <span>قارن كل المزايا</span>
+              <span>
+                <ListChecks aria-hidden="true" /> قارن كل المزايا
+              </span>
               <Plus aria-hidden="true" />
             </summary>
 
@@ -119,7 +151,13 @@ export function Pricing() {
                         className={value === '—' ? 'is-muted' : 'is-included'}
                         key={`${row.label}-${pricing.plans[index]?.id ?? index}`}
                       >
-                        {value === '✓' ? <Check size={14} aria-label="مشمولة" /> : value}
+                        {value === '✓' ? (
+                          <Check size={14} aria-label="مشمولة" />
+                        ) : value === '—' ? (
+                          <Minus size={14} aria-label="غير مشمولة" />
+                        ) : (
+                          value
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -155,16 +193,21 @@ export function Pricing() {
         <div className="addons">
           <div className="addons__head">
             <div>
-              <h3>{pricing.addonsTitle}</h3>
+              <h3>
+                <PlusCircle aria-hidden="true" />
+                {pricing.addonsTitle}
+              </h3>
               <p>{pricing.addonsLead}</p>
             </div>
-            <Sparkles aria-hidden="true" size={20} style={{ color: 'var(--coral)' }} />
+            <Sparkles className="addons__spark" aria-hidden="true" size={20} />
           </div>
 
           <div className="addons__grid">
             {pricing.addons.map((addon, index) => (
               <Reveal className="addon" key={addon.title} delay={index * 0.03}>
-                <div className="addon__index">0{index + 1}</div>
+                <div className="addon__index">
+                  <Sparkles aria-hidden="true" />0{index + 1}
+                </div>
                 <h4>{addon.title}</h4>
                 <p>{addon.body}</p>
               </Reveal>
@@ -173,6 +216,7 @@ export function Pricing() {
 
           <div className="addons__cta">
             <Button href={site.whatsappHref} target="_blank" rel="noopener noreferrer" variant="primary">
+              <MessageCircle aria-hidden="true" />
               {pricing.addonsCta}
             </Button>
           </div>
