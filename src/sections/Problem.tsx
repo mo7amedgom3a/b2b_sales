@@ -8,7 +8,7 @@ import { Tag } from '../ui/Tag'
 const cardIcons = [Percent, PhoneMissed, Shuffle, Hourglass] as const
 
 export function Problem() {
-  const stackRef = useCardStack<HTMLDivElement>({ breakpoint: 767, peek: 10, step: 300 })
+  const stackRef = useCardStack<HTMLDivElement>({ breakpoint: 767 })
 
   return (
     <section className="section section--band problem" id="problem">
@@ -38,7 +38,7 @@ export function Problem() {
               return (
                 <div className="stack__item" key={card.title}>
                   <Reveal className="stack__card" delay={index * 0.04}>
-                    <article className={`problem-card problem-card--${card.tone} card-raised card-tone-${card.tone}`}>
+                    <article className={`problem-card problem-card--${card.tone}`}>
                       <span className="problem-card__icon">
                         <Icon aria-hidden="true" />
                       </span>

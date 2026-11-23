@@ -34,7 +34,7 @@ export function SuccessStory() {
           </Reveal>
 
           <Reveal delay={0.08}>
-            <div className="story-results card-raised card-tone-purple">
+            <div className="story-results">
               <div>
                 <p className="story-results__label">النتيجة — خلال 6 أشهر</p>
               </div>
@@ -98,7 +98,7 @@ export function SuccessStory() {
           </div>
           <div className="testimonials__grid">
             {story.testimonials.map((item, index) => (
-              <Reveal className={`testimonial card-raised card-tone-${item.tone ?? 'coral'}`} key={item.name} delay={index * 0.05}>
+              <Reveal className={`testimonial `} key={item.name} delay={index * 0.05}>
                 <span className="testimonial__mark" aria-hidden="true">
                   ”
                 </span>

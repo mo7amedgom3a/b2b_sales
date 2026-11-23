@@ -1,5 +1,5 @@
 import * as Accordion from '@radix-ui/react-accordion'
-import { Plus } from 'lucide-react'
+import { AnimateIcon, AnimatedPlus } from '../ui/animated-icons'
 import { faq, site } from '../content/ar'
 import { Reveal } from '../motion/Reveal'
 import { Button } from '../ui/Button'
@@ -40,7 +40,9 @@ export function Faq() {
                     <Accordion.Trigger className="faq-item__trigger">
                       <span>{item.q}</span>
                       <span className="faq-item__icon" aria-hidden="true">
-                        <Plus />
+                        <AnimateIcon animateOnHover>
+                          <AnimatedPlus size={14} />
+                        </AnimateIcon>
                       </span>
                     </Accordion.Trigger>
                   </Accordion.Header>

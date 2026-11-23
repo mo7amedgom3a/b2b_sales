@@ -736,15 +736,17 @@ a { color: inherit; }
 }
 
 /* ---------- Logos + stats ---------- */
-.logos { padding-block: clamp(36px, 4vw, 56px); background: var(--surface); }
+.logos { padding-block: clamp(48px, 6vw, 76px) clamp(36px, 4vw, 56px); background: var(--surface); }
 .logos__label {
   text-align: center;
-  max-width: 54em;
-  margin: 0 auto 24px;
+  max-width: 820px;
+  margin: 0 auto 40px;
   font-family: var(--font-arabic);
-  font-size: 14px;
-  line-height: 24px;
-  color: var(--text-muted);
+  font-size: clamp(20px, 2.6vw, 26px);
+  line-height: 1.55;
+  font-weight: 700;
+  color: var(--text);
+  text-wrap: balance;
 }
 .marquee { overflow: hidden; }
 .marquee__track {
@@ -755,7 +757,7 @@ a { color: inherit; }
 }
 .marquee:hover .marquee__track,
 .marquee:focus-within .marquee__track { animation-play-state: paused; }
-.marquee__group { display: flex; gap: 10px; padding-inline-end: 10px; }
+.marquee__group { display: flex; align-items: center; gap: 56px; padding-inline-end: 56px; padding-block: 12px; }
 .logo-tile {
   display: grid;
   place-items: center;
@@ -2299,8 +2301,8 @@ a { color: inherit; }
    already re-entering on the right, and the -50% loop point is invisible. */
 .marquee {
   direction: ltr;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
-  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
 }
 .marquee__track {
   animation: ma-marquee 60s linear infinite;
@@ -2391,28 +2393,66 @@ a { color: inherit; }
   .eyebrow__dot { animation: none; }
 }
 
+/* ---------- Featured subscription glow (restored on request) ---------- */
+@property --plan-glow-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.plan-slot { display: flex; min-width: 0; }
+.plan-slot > .plan { flex: 1; min-width: 0; }
+.plan-glow {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  padding: 2px;
+  border-radius: calc(var(--radius-card) + 2px);
+  background: conic-gradient(from var(--plan-glow-angle), var(--coral), var(--yellow), var(--pink), var(--coral));
+  animation: ma-plan-glow-spin 5s linear infinite;
+}
+.plan-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: inherit;
+  filter: blur(22px);
+  opacity: 0.42;
+}
+.plan-glow > .plan { flex: 1; min-width: 0; border-color: transparent; }
+.plan-glow .plan--featured::before { display: none; }
+@keyframes ma-plan-glow-spin { to { --plan-glow-angle: 360deg; } }
+.plan-glow:hover .plan { border-color: transparent; }
+@media (prefers-reduced-motion: reduce) {
+  .plan-glow { animation: none; }
+  .plan-glow::after { opacity: 0.22; }
+}
+
 /* ---------- Bare logo belt (logos only, no chips) ---------- */
 .marquee .logo-tile {
   width: auto;
-  height: 48px;
-  padding: 0 10px;
+  height: 44px;
+  padding: 0;
   background: transparent;
   border: 0;
   border-radius: 0;
   flex: none;
 }
 .marquee .logo-tile img {
-  max-height: 40px;
-  max-width: 128px;
+  max-height: 44px;
+  max-width: 140px;
   width: auto;
   height: auto;
   object-fit: contain;
 }
 .marquee .logo-tile:hover { transform: none; }
-.marquee__group { gap: 16px; padding-inline-end: 16px; }
 @media (max-width: 559px) {
-  .marquee .logo-tile { height: 40px; padding: 0 6px; }
-  .marquee .logo-tile img { max-height: 32px; max-width: 92px; }
+  .marquee .logo-tile { height: 36px; }
+  .marquee .logo-tile img { max-height: 36px; max-width: 104px; }
+  .marquee__group { gap: 36px; padding-inline-end: 36px; }
 }
 
 /* ---------- Product cards with a real background image ---------- */
@@ -2518,27 +2558,8 @@ a { color: inherit; }
 .chart-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .chart-panel__title { font-size: 11.5px; font-weight: 700; font-family: var(--font-arabic); }
 
-/* ---------- Elevated cards: solid surface + soft tone-tinted shadow ---------- */
-.card-raised {
-  position: relative;
-  box-shadow:
-    0 1px 2px rgba(23, 22, 27, 0.06),
-    0 18px 38px -24px color-mix(in srgb, var(--card-tone, var(--ink)) 58%, transparent);
-  transition: box-shadow .25s var(--ease-out), transform .25s var(--ease-out);
-}
-.card-raised:hover {
-  box-shadow:
-    0 2px 4px rgba(23, 22, 27, 0.08),
-    0 26px 48px -24px color-mix(in srgb, var(--card-tone, var(--ink)) 66%, transparent);
-}
-.card-tone-coral { --card-tone: var(--coral); }
-.card-tone-yellow { --card-tone: var(--yellow); }
-.card-tone-lilac { --card-tone: var(--lilac); }
-.card-tone-sky { --card-tone: var(--sky); }
-.card-tone-purple { --card-tone: var(--purple); }
-.card-tone-green { --card-tone: var(--green); }
-.card-tone-teal { --card-tone: var(--teal); }
-.card-tone-ink { --card-tone: var(--text); }
+/* ---------- Cards: solid surfaces, no shadow (human request, 2026-11-23) ---------- */
+/* Card families are solid and bordered only; the featured plan keeps its ring. */
 
 /* ---------- Non-stop micro motion ---------- */
 .res-rank__bar, .dash__fill, .builder__bar .fill { position: relative; overflow: hidden; }
@@ -2630,46 +2651,53 @@ a { color: inherit; }
   .accreditation__short { font-size: 9px; }
 }
 
-/* ---------- Mobile stacked decks ---------- */
+/* ---------- Mobile stacked cards (Framer/GSAP pattern, sticky) ---------- */
 .stack { position: relative; }
 @media (max-width: 767px) {
-  .stack.is-stacked > * { will-change: transform, opacity; }
-  .stack.is-stacked { padding-block-end: 0; }
+  .stack.is-stacked { display: block; }
+  .stack.is-stacked > * {
+    position: sticky;
+    inset-block-start: calc(var(--header-h) + 12px);
+    margin-block-end: 14px;
+    z-index: 1;
+  }
+  .stack.is-stacked > *:nth-child(2) { z-index: 2; }
+  .stack.is-stacked > *:nth-child(3) { z-index: 3; }
+  .stack.is-stacked > *:nth-child(4) { z-index: 4; }
+  .stack.is-stacked > *:nth-child(5) { z-index: 5; }
+  .stack.is-stacked > *:last-child { margin-block-end: 0; }
+  .stack.is-stacked .stack__card { perspective: 900px; }
+  .stack.is-stacked .stack__card > * { will-change: transform; }
 }
 
-/* ---------- Swipe deck (compare cards on small screens) ---------- */
-.deck { position: relative; min-width: 0; }
-.compare__mobile { min-width: 0; }
-.reports__grid > * { min-width: 0; }
-.dash { min-width: 0; }
-.plans { min-width: 0; }
-.deck__rail {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  gap: 10px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  overscroll-behavior-x: contain;
-  scroll-padding-inline: 0;
-}
-.deck__rail::-webkit-scrollbar { display: none; }
-.deck__card { flex: 0 0 100%; min-width: 0; scroll-snap-align: center; }
-.deck__card .compare-card { height: 100%; }
-.deck__dots { display: flex; justify-content: center; gap: 5px; margin-block-start: 10px; }
-.deck__dot {
-  width: 16px;
-  height: 4px;
-  padding: 0;
-  border: 0;
+/* ---------- Horizontal pan (Framer/GSAP pattern, compare table) ---------- */
+.h-pan { position: relative; overflow: hidden; }
+.h-pan__track { display: flex; min-width: 0; }
+.h-pan__panel { flex: 0 0 100%; min-width: 0; }
+.h-pan__panel .compare-card { height: 100%; }
+.h-pan__progress { display: none; }
+.h-pan.is-panning .h-pan__progress {
+  display: block;
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: 6px;
+  height: 3px;
   border-radius: var(--radius-full);
   background: var(--line);
-  cursor: pointer;
-  transition: width 0.2s var(--ease-out), background-color 0.2s var(--ease-out);
 }
-.deck__dot[aria-selected="true"] { width: 24px; background: var(--accent); }
+.h-pan.is-panning .h-pan__progress::before {
+  content: "";
+  display: block;
+  height: 100%;
+  width: calc(var(--pan-progress, 0) * 100%);
+  border-radius: inherit;
+  background: var(--coral);
+}
+@media (prefers-reduced-motion: reduce) {
+  .h-pan { overflow-x: auto; scroll-snap-type: x mandatory; }
+  .h-pan__panel { scroll-snap-align: center; }
+  .h-pan__progress { display: none; }
+}
 
 /* ---------- Hero demo: 5th step content ---------- */
 .train-row { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding-block: 7px; border-block-end: 1px solid var(--line); }
@@ -2780,7 +2808,6 @@ a { color: inherit; }
 /* ---------- Reduced motion for the round ---------- */
 @media (prefers-reduced-motion: reduce) {
   .tw-char, .tw-char--out, .tw-caret, .tw-caret.is-typing { animation: none; }
-  .card-raised, .card-raised:hover { transition: none; }
   .res-rank__bar::after, .dash__fill::after, .builder__bar .fill::after { animation: none; display: none; }
   .bubble--coach { animation: none; }
   .deck__rail { scroll-behavior: auto; }
@@ -2820,20 +2847,13 @@ a { color: inherit; }
 .ai-coach-badge svg { width: 13px; height: 13px; color: var(--coral); flex: none; }
 .hero__mark .hero__mark-text::after { content: none; }
 
-/* ---------- Stack wrappers (GSAP decks) ---------- */
+/* ---------- Stack wrappers ---------- */
 .stack__item { display: flex; min-width: 0; }
 .stack__card { display: flex; width: 100%; min-width: 0; }
 .stack__card > * { flex: 1; min-width: 0; }
 @media (max-width: 899px) {
   .how__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-.stack.is-stacked .stack__item,
-.stack.is-stacked .stack__card,
-.stack.is-stacked .stack__card > * { height: 100%; }
-.stack.is-stacked .how-step,
-.stack.is-stacked .delivery-card { height: 100%; }
-.stack.is-stacked .how-step { padding: 20px 18px; }
-.stack.is-stacked .how-step__num { font-size: 30px; }
 
 /* ---------- Reports: query bar focus + mobile spotlight ---------- */
 .spot { display: none; }
@@ -2848,12 +2868,11 @@ a { color: inherit; }
 
 /* ---------- Remaining layout fixes for the enhancement round ---------- */
 .hero__title { font-size: clamp(30px, 3.3vw, 46px); line-height: 1.2; max-width: 14em; }
-.hero__demo-wrap.card-raised { border-radius: var(--radius-card); }
+
 .booking__outcome { display: grid; grid-template-columns: 22px 18px minmax(0, 1fr); gap: 8px; align-items: start; }
 .booking__outcome svg { width: 14px; height: 14px; margin-block-start: 3px; color: var(--coral); flex: none; }
 .trainers__criteria span { display: inline-flex; align-items: center; gap: 6px; }
-.testimonial.card-raised { border-radius: var(--radius-card); }
-.product-card-wrap.card-raised { border-radius: var(--radius-card); }
+
 .compare-card__row p { padding-inline-start: 16px; }
 .deck .compare-card { padding: 16px; }
 @media (max-width: 767px) {
@@ -2890,3 +2909,43 @@ a { color: inherit; }
   width: calc(var(--stack-progress, 0) * 100%);
   background: var(--coral);
 }
+
+
+/* GSAP drives the belt once it loads (Framer behaviour: 50s loop, slow on hover). */
+.marquee--gsap .marquee__track { animation: none; }
+.marquee--gsap .marquee__track { will-change: transform; }
+
+
+/* The pan handles its own layout below 900px (compare table is hidden there). */
+@media (max-width: 899px) {
+  .compare__mobile.h-pan { display: block; }
+}
+
+/* ---------- Animate UI–style animated icons ---------- */
+.anim-icon { display: inline-flex; line-height: 0; }
+.ma-btn--icon > .anim-icon { width: 100%; height: 100%; display: grid; place-items: center; }
+.res-cell .anim-icon { width: 100%; height: 100%; display: grid; place-items: center; }
+.res-cell svg { animation: ma-icon-pop 0.4s var(--ease-out) both; }
+@keyframes ma-icon-pop {
+  from { transform: scale(0.55); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .res-cell svg { animation: none; }
+}
+
+/* ---------- Typewriter containers must never push the layout ---------- */
+.dash__query .tw {
+  display: block;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dash__query { min-height: 42px; }
+.mock__prompt .tw { min-width: 0; overflow-wrap: anywhere; }
+.builder, .builder__body, .builder__path { min-width: 0; }
+.builder__path { overflow-wrap: anywhere; }
+.paths__grid > * { min-width: 0; }
+.paths__example { overflow-wrap: anywhere; }

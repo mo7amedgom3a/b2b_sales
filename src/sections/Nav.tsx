@@ -1,21 +1,10 @@
 import { useEffect, useState } from 'react'
-import {
-  ArrowUpLeft,
-  Bot,
-  CircleHelp,
-  Library,
-  Menu,
-  Moon,
-  Package,
-  Route,
-  Sun,
-  Trophy,
-  X,
-} from 'lucide-react'
+import { ArrowUpLeft, Bot, CircleHelp, Library, Package, Route, Trophy } from 'lucide-react'
 import { navLinks, site } from '../content/ar'
 import { useActiveSection } from '../hooks/useActiveSection'
 import { useTheme } from '../hooks/useTheme'
 import { cn } from '../lib/cx'
+import { AnimateIcon, AnimatedMenu, AnimatedMoon, AnimatedSun, AnimatedX } from '../ui/animated-icons'
 
 const SECTION_IDS = ['paths', 'library', 'ai', 'stories', 'pricing', 'faq'] as const
 
@@ -99,7 +88,15 @@ export function Nav() {
             aria-label={theme === 'dark' ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'}
             title={theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
           >
-            {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
+            {theme === 'dark' ? (
+              <AnimateIcon animateOnHover>
+                <AnimatedSun size={20} />
+              </AnimateIcon>
+            ) : (
+              <AnimateIcon animateOnHover>
+                <AnimatedMoon size={20} />
+              </AnimateIcon>
+            )}
           </button>
           <a className="ma-btn ma-btn--primary ma-btn--sm nav__cta" href="#booking">
             احجز جلسة تشخيص
@@ -112,7 +109,15 @@ export function Nav() {
             aria-controls="mobile-menu"
             aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
           >
-            {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+            {open ? (
+              <AnimateIcon animateOnHover>
+                <AnimatedX size={22} />
+              </AnimateIcon>
+            ) : (
+              <AnimateIcon animateOnHover>
+                <AnimatedMenu size={22} />
+              </AnimateIcon>
+            )}
           </button>
         </div>
       </div>

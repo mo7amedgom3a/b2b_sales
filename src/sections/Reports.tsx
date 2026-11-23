@@ -174,7 +174,7 @@ export function Reports() {
           </Reveal>
 
           <Reveal delay={0.08}>
-            <div className="dash card-raised card-tone-purple">
+            <div className="dash">
               <div className="dash__top">
                 <span className="dash__title">لوحة متابعة الفريق</span>
                 <Tag tone="soft">{reports.demoLabel}</Tag>

@@ -93,7 +93,7 @@ export function Paths() {
 
           <div ref={ref} {...hoverProps}>
             <Reveal delay={0.08}>
-              <div className="builder card-raised card-tone-sky">
+              <div className="builder">
                 <div className="builder__top">
                   <span className="builder__title">
                     <span className="dot" aria-hidden="true" />

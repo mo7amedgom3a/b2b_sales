@@ -22,6 +22,7 @@ import { useInViewAutoplay } from '../../motion/useInViewAutoplay'
 import { TypewriterChars } from '../../motion/TypewriterText'
 import { useExitGhosts, useTypewriter } from '../../motion/useTypewriter'
 import { Tag } from '../../ui/Tag'
+import { AnimateIcon, AnimatedAlert, AnimatedCheck, AnimatedMinus } from '../../ui/animated-icons'
 
 type Phase = 'typing' | 'working' | 'done'
 
@@ -86,7 +87,15 @@ function FragmentRow({ name, cells }: { name: string; cells: readonly string[] }
           role="img"
           aria-label={`${name}: ${skills[index]} — ${skillLabels[cell] ?? cell}`}
         >
-          {cell === 'gap' ? '!' : cell === 'mid' ? '~' : '✓'}
+          <AnimateIcon animateOnHover>
+            {cell === 'gap' ? (
+              <AnimatedAlert size={12} />
+            ) : cell === 'mid' ? (
+              <AnimatedMinus size={12} />
+            ) : (
+              <AnimatedCheck size={12} />
+            )}
+          </AnimateIcon>
         </span>
       ))}
     </>

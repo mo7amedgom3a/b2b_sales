@@ -26,12 +26,12 @@ export function TypewriterChars({
     <span className={cn('tw', className)} style={style} aria-hidden="true">
       {chars.map((char, index) => (
         <span className="tw-char" key={index}>
-          {char === ' ' ? '\u00a0' : char}
+          {char}
         </span>
       ))}
       {ghosts.map((ghost) => (
         <span className="tw-char tw-char--out" key={`g${ghost.key}`}>
-          {ghost.char === ' ' ? '\u00a0' : ghost.char}
+          {ghost.char}
         </span>
       ))}
       {caret && phase !== 'done' ? (

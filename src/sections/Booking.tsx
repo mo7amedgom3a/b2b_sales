@@ -158,7 +158,7 @@ export function Booking() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <div className="form-card card-raised card-tone-sky">
+          <div className="form-card">
             {status === 'success' ? (
               <div className="form-success" role="status">
                 <div className="ma-alert ma-alert--success">

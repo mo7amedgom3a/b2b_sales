@@ -33,7 +33,7 @@ export function Hero() {
           </p>
         </div>
 
-        <div className="hero__demo-wrap hero-enter hero-enter--delay card-raised card-tone-purple">
+        <div className="hero__demo-wrap hero-enter hero-enter--delay">
           <HeroDemo />
         </div>
       </div>

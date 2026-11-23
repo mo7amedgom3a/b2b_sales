@@ -49,7 +49,7 @@ export function Trainers() {
 
         <div className="trainers__grid">
           {people.map((person, index) => (
-            <Reveal className={`trainer card-raised card-tone-${person.tone ?? 'yellow'}`} key={person.name} delay={index * 0.03}>
+            <Reveal className={`trainer `} key={person.name} delay={index * 0.03}>
               <Avatar
                 initial={person.initial}
                 tone={person.tone}

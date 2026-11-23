@@ -141,7 +141,7 @@ export function Library() {
 
         <div className="product-grid">
           {products.map((product, index) => (
-            <Reveal className={`product-card-wrap card-raised card-tone-${tones[index % tones.length] ?? 'coral'}`} key={product.slug} delay={index * 0.04}>
+            <Reveal className="product-card-wrap" key={product.slug} delay={index * 0.04}>
               <ProductCard product={product} tone={tones[index % tones.length] ?? 'coral'} index={index} />
             </Reveal>
           ))}
