@@ -1,4 +1,4 @@
-import { BookOpen, Check, RefreshCw } from 'lucide-react'
+import { BookOpen, Check, Compass, GraduationCap, Presentation, RefreshCw } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useInViewOnce } from '../hooks/useInViewOnce'
 import { trainers } from '../content/ar'
@@ -12,6 +12,7 @@ import { SecHead } from '../ui/SecHead'
 import { Tag } from '../ui/Tag'
 
 const tones = ['coral', 'yellow', 'sky', 'lilac', 'green', 'purple'] as const
+const criteriaIcons = [Compass, GraduationCap, Presentation] as const
 
 export function Trainers() {
   const [people, setPeople] = useState<TrainerCard[]>(() => mergeTrainers([]))
@@ -48,7 +49,7 @@ export function Trainers() {
 
         <div className="trainers__grid">
           {people.map((person, index) => (
-            <Reveal className="trainer" key={person.name} delay={index * 0.03}>
+            <Reveal className={`trainer card-glow glow-${person.tone ?? 'yellow'}`} key={person.name} delay={index * 0.03}>
               <Avatar
                 initial={person.initial}
                 tone={person.tone}
@@ -77,12 +78,15 @@ export function Trainers() {
         </div>
 
         <div className="trainers__criteria">
-          {trainers.criteria.map((criterion) => (
-            <span key={criterion}>
-              <Check aria-hidden="true" />
-              {criterion}
-            </span>
-          ))}
+          {trainers.criteria.map((criterion, index) => {
+            const CriterionIcon = criteriaIcons[index] ?? Check
+            return (
+              <span key={criterion}>
+                <CriterionIcon aria-hidden="true" />
+                {criterion}
+              </span>
+            )
+          })}
         </div>
       </div>
     </section>

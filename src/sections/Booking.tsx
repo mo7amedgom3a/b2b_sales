@@ -1,6 +1,20 @@
-import { CalendarClock, Check } from 'lucide-react'
+import {
+  ArrowRight,
+  Briefcase,
+  Building2,
+  CalendarClock,
+  Check,
+  IdCard,
+  Mail,
+  Map,
+  MessageSquareWarning,
+  Package,
+  Phone,
+  User,
+  Users,
+  Route,
+} from 'lucide-react'
 import { useState } from 'react'
-import { Icon } from '../ui/Icon'
 import type { FormEvent, ReactNode } from 'react'
 import { booking, site } from '../content/ar'
 import { isValidEmail, isValidFullName, isValidPhone, toLatinDigits } from '../lib/digits'
@@ -25,6 +39,19 @@ type FormState = {
 
 type Field = keyof FormState
 type Status = 'idle' | 'loading' | 'success'
+
+const outcomeIcons = [Map, Route, Package] as const
+
+const fieldIcons = {
+  fullName: User,
+  jobTitle: IdCard,
+  company: Building2,
+  phone: Phone,
+  email: Mail,
+  teamSize: Users,
+  sector: Briefcase,
+  challenge: MessageSquareWarning,
+} as const
 
 const initialForm: FormState = {
   fullName: '',
@@ -114,12 +141,16 @@ export function Booking() {
           <h2 className="booking__title"><GlassText>{booking.title}</GlassText></h2>
           <p className="booking__lead">{booking.lead}</p>
           <ol className="booking__outcomes">
-            {booking.outcomes.map((outcome, index) => (
-              <li className="booking__outcome" key={outcome}>
-                <span className="booking__outcome__num">{index + 1}</span>
-                <span>{outcome}</span>
-              </li>
-            ))}
+            {booking.outcomes.map((outcome, index) => {
+              const OutcomeIcon = outcomeIcons[index] ?? Map
+              return (
+                <li className="booking__outcome" key={outcome}>
+                  <span className="booking__outcome__num">{index + 1}</span>
+                  <OutcomeIcon aria-hidden="true" />
+                  <span>{outcome}</span>
+                </li>
+              )
+            })}
           </ol>
           <p className="booking__note">
             {booking.note} <Todo>24 ساعة عمل تحتاج تأكيداً</Todo>
@@ -127,7 +158,7 @@ export function Booking() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <div className="form-card">
+          <div className="form-card card-glow glow-sky">
             {status === 'success' ? (
               <div className="form-success" role="status">
                 <div className="ma-alert ma-alert--success">
@@ -293,7 +324,7 @@ export function Booking() {
                       aria-busy={status === 'loading'}
                     >
                       {booking.submit}
-                      {status !== 'loading' ? <Icon name="arrow" className="btn-arrow" size={18} /> : null}
+                      {status !== 'loading' ? <ArrowRight className="btn-arrow" size={18} aria-hidden="true" /> : null}
                     </button>
                     <p className="form-note">{booking.note}</p>
                   </div>
@@ -317,9 +348,11 @@ type FieldWrapProps = {
 }
 
 function FieldWrap({ field, label, error, help, required, children }: FieldWrapProps) {
+  const Icon = fieldIcons[field]
   return (
     <div className={cn('ma-field', error && 'is-error')}>
-      <label className="ma-label" htmlFor={field}>
+      <label className="ma-label ma-field__label" htmlFor={field}>
+        <Icon aria-hidden="true" />
         {label}
         {required ? <span className="req" aria-hidden="true"> *</span> : null}
       </label>

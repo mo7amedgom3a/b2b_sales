@@ -1,11 +1,32 @@
 import { useEffect, useState } from 'react'
-import { Icon } from '../ui/Icon'
+import {
+  ArrowUpLeft,
+  Bot,
+  CircleHelp,
+  Library,
+  Menu,
+  Moon,
+  Package,
+  Route,
+  Sun,
+  Trophy,
+  X,
+} from 'lucide-react'
 import { navLinks, site } from '../content/ar'
 import { useActiveSection } from '../hooks/useActiveSection'
 import { useTheme } from '../hooks/useTheme'
 import { cn } from '../lib/cx'
 
 const SECTION_IDS = ['paths', 'library', 'ai', 'stories', 'pricing', 'faq'] as const
+
+const linkIcons = {
+  '#paths': Route,
+  '#library': Library,
+  '#ai': Bot,
+  '#stories': Trophy,
+  '#pricing': Package,
+  '#faq': CircleHelp,
+} as const
 
 export function Nav() {
   const [open, setOpen] = useState(false)
@@ -52,17 +73,21 @@ export function Nav() {
 
         <nav aria-label="التنقل الرئيسي">
           <ul className="ma-nav__links nav__links">
-            {navLinks.map((link) => (
-              <li key={link.href}>
-                <a
-                  href={link.href}
-                  aria-current={active === link.href.slice(1) ? 'page' : undefined}
-                  onClick={() => setOpen(false)}
-                >
-                  {link.label}
-                </a>
-              </li>
-            ))}
+            {navLinks.map((link) => {
+              const Icon = linkIcons[link.href as keyof typeof linkIcons] ?? Route
+              return (
+                <li key={link.href}>
+                  <a
+                    href={link.href}
+                    aria-current={active === link.href.slice(1) ? 'page' : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    <Icon aria-hidden="true" />
+                    {link.label}
+                  </a>
+                </li>
+              )
+            })}
           </ul>
         </nav>
 
@@ -74,7 +99,7 @@ export function Nav() {
             aria-label={theme === 'dark' ? 'التبديل إلى الوضع الفاتح' : 'التبديل إلى الوضع الداكن'}
             title={theme === 'dark' ? 'الوضع الفاتح' : 'الوضع الداكن'}
           >
-            <Icon name={theme === 'dark' ? 'sun' : 'moon'} />
+            {theme === 'dark' ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
           </button>
           <a className="ma-btn ma-btn--primary ma-btn--sm nav__cta" href="#booking">
             احجز جلسة تشخيص
@@ -87,7 +112,7 @@ export function Nav() {
             aria-controls="mobile-menu"
             aria-label={open ? 'إغلاق القائمة' : 'فتح القائمة'}
           >
-            <Icon name={open ? 'close' : 'menu'} size={22} />
+            {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
         </div>
       </div>
@@ -100,14 +125,18 @@ export function Nav() {
         <div className="nav__mobile" id="mobile-menu">
           <div className="ma-container">
             <ul className="nav__mobile-list">
-              {navLinks.map((link) => (
-                <li key={link.href}>
-                  <a href={link.href} onClick={() => setOpen(false)}>
-                    <span>{link.label}</span>
-                    <Icon name="arrow-out" size={16} />
-                  </a>
-                </li>
-              ))}
+              {navLinks.map((link) => {
+                const Icon = linkIcons[link.href as keyof typeof linkIcons] ?? Route
+                return (
+                  <li key={link.href}>
+                    <a href={link.href} onClick={() => setOpen(false)}>
+                      <Icon aria-hidden="true" />
+                      <span>{link.label}</span>
+                      <ArrowUpLeft size={16} aria-hidden="true" />
+                    </a>
+                  </li>
+                )
+              })}
             </ul>
             <div className="nav__mobile-actions">
               <a

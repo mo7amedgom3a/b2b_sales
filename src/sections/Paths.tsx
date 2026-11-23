@@ -1,10 +1,10 @@
-import { Sparkles } from 'lucide-react'
+import { ArrowRight, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { Icon } from '../ui/Icon'
 import { useReducedMotion } from 'motion/react'
 import { paths } from '../content/ar'
 import { useInViewAutoplay } from '../motion/useInViewAutoplay'
-import { useTypewriter } from '../motion/useTypewriter'
+import { TypewriterChars } from '../motion/TypewriterText'
+import { useExitGhosts, useTypewriter } from '../motion/useTypewriter'
 import { Reveal } from '../motion/Reveal'
 import { Button } from '../ui/Button'
 import { SecHead } from '../ui/SecHead'
@@ -46,10 +46,12 @@ export function Paths() {
   const { text: typedPath } = useTypewriter([composed], {
     loop: false,
     restartKey: composed,
-    typeMs: 22,
     holdMs: 6000,
     paused,
+    jitterMs: [14, 30],
+    punctuationHoldMs: 60,
   })
+  const ghosts = useExitGhosts(typedPath)
 
   const progress = Math.max(
     6,
@@ -91,7 +93,7 @@ export function Paths() {
 
           <div ref={ref} {...hoverProps}>
             <Reveal delay={0.08}>
-              <div className="builder">
+              <div className="builder card-glow glow-sky">
                 <div className="builder__top">
                   <span className="builder__title">
                     <span className="dot" aria-hidden="true" />
@@ -100,9 +102,8 @@ export function Paths() {
                   <span className="ma-tag ma-tag--soft">أكثر من 1000 احتمال</span>
                 </div>
                 <div className="builder__body">
-                  <div className="builder__path" aria-live="polite">
-                    {typedPath}
-                    <span className="caret" aria-hidden="true" />
+                  <div className="builder__path">
+                    <TypewriterChars text={typedPath} ghosts={ghosts} caret phase="typing" />
                   </div>
                   <div className="builder__meta">
                     <span className="ma-tag ma-tag--yellow">{get('level')}</span>
@@ -144,7 +145,7 @@ export function Paths() {
           <div className="paths__cta">
             <Button href="#booking" variant="primary">
               {paths.cta}
-              <Icon name="arrow" className="btn-arrow" size={18} />
+              <ArrowRight className="btn-arrow" size={18} aria-hidden="true" />
             </Button>
           </div>
         </Reveal>

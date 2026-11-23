@@ -1,4 +1,4 @@
-import { BookOpen, Bot, Clock3, Landmark, Megaphone, RefreshCw, TrendingUp, UserRound } from 'lucide-react'
+import { ArrowUpLeft, BookOpen, Bot, Clock3, Landmark, Megaphone, RefreshCw, TrendingUp, UserRound } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fallbackProducts } from '../content/products'
 import { fetchSalesProductCards, SITE_URL } from '../lib/api'
@@ -8,7 +8,6 @@ import { pickSalesProducts } from '../lib/products'
 import { Reveal } from '../motion/Reveal'
 import { Avatar } from '../ui/Avatar'
 import { Button } from '../ui/Button'
-import { Icon } from '../ui/Icon'
 import { SecHead } from '../ui/SecHead'
 import { Tag } from '../ui/Tag'
 
@@ -90,7 +89,7 @@ function ProductCard({ product, tone, index }: { product: ApiProductCard; tone: 
       <div className="product-card__foot">
         <span className="product-card__price">{formatPrice(product.price)}</span>
         <span className="product-card__arrow" aria-hidden="true">
-          <Icon name="arrow-out" size={14} />
+          <ArrowUpLeft size={14} aria-hidden="true" />
         </span>
       </div>
     </a>
@@ -142,7 +141,7 @@ export function Library() {
 
         <div className="product-grid">
           {products.map((product, index) => (
-            <Reveal className="product-card-wrap" key={product.slug} delay={index * 0.04}>
+            <Reveal className={`product-card-wrap card-glow glow-${tones[index % tones.length] ?? 'coral'}`} key={product.slug} delay={index * 0.04}>
               <ProductCard product={product} tone={tones[index % tones.length] ?? 'coral'} index={index} />
             </Reveal>
           ))}
@@ -154,7 +153,7 @@ export function Library() {
           </Button>
           <Button href={`${SITE_URL}/courses`} target="_blank" rel="noopener noreferrer" variant="soft">
             تصفح المكتبة
-            <Icon name="arrow-out" size={16} className="btn-arrow-out" />
+            <ArrowUpLeft size={16} className="btn-arrow-out" aria-hidden="true" />
           </Button>
         </div>
       </div>

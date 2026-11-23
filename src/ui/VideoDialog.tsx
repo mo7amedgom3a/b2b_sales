@@ -1,6 +1,6 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Button } from './Button'
-import { Icon } from './Icon'
+import { X } from 'lucide-react'
 
 type VideoDialogProps = {
   open: boolean
@@ -21,7 +21,7 @@ export function VideoDialog({ open, onOpenChange, title, youtubeId, start, note 
           <div className="dialog__head">
             <Dialog.Title className="dialog__title">{title}</Dialog.Title>
             <Dialog.Close className="dialog__close" aria-label="إغلاق">
-              <Icon name="close" />
+              <X size={18} aria-hidden="true" />
             </Dialog.Close>
           </div>
           <div className="dialog__body">

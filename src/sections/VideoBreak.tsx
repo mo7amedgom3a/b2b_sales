@@ -1,6 +1,5 @@
-import { Clock3 } from 'lucide-react'
+import { Clock3, Play } from 'lucide-react'
 import { useState } from 'react'
-import { Icon } from '../ui/Icon'
 import { video } from '../content/ar'
 import { GlassText } from '../motion/GlassText'
 import { Reveal } from '../motion/Reveal'
@@ -55,7 +54,7 @@ export function VideoBreak() {
                 aria-label={video.cta}
               >
                 <span className="circle" aria-hidden="true">
-                  <Icon name="play" />
+                  <Play />
                 </span>
               </button>
             </div>
@@ -66,7 +65,7 @@ export function VideoBreak() {
           <div className="video-band__actions">
             <Button variant="on-ink" size="lg" onClick={() => setOpen(true)}>
               {video.cta}
-              <Icon name="play" size={18} />
+              <Play size={18} aria-hidden="true" />
             </Button>
           </div>
         </Reveal>

@@ -1,21 +1,42 @@
-import { Check, Clock, Radio, Sparkles } from 'lucide-react'
+import {
+  Check,
+  Clock,
+  Gauge,
+  Hammer,
+  HeartHandshake,
+  PenTool,
+  Radio,
+  RotateCcw,
+  Rocket,
+  SlidersHorizontal,
+  Sparkles,
+  Stethoscope,
+  TrendingUp,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react'
 import { useRef } from 'react'
 import { motion, useReducedMotion, useScroll, useSpring } from 'motion/react'
 import { how } from '../content/ar'
+import { useCardStack } from '../motion/useCardStack'
 import { Reveal } from '../motion/Reveal'
+import { Deck } from '../ui/Deck'
 import { SecHead } from '../ui/SecHead'
 
-const icons = {
-  clock: Clock,
-  live: Radio,
-  spark: Sparkles,
-} as const
+const stepIcons = [Stethoscope, PenTool, Rocket, TrendingUp] as const
+const deliveryIcons = { clock: Clock, live: Radio, spark: Sparkles } as const
+const deliveryTones = ['coral', 'yellow', 'purple'] as const
+const stepTones = ['coral', 'yellow', 'purple', 'sky'] as const
+const compareIcons = [Clock, SlidersHorizontal, Hammer, Users, RotateCcw, Gauge, HeartHandshake, Wallet] as const
 
 export function HowWeWork() {
   const ref = useRef<HTMLDivElement>(null)
   const reduce = useReducedMotion()
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 85%', 'end 40%'] })
   const scaleX = useSpring(scrollYProgress, { stiffness: 120, damping: 26, restDelta: 0.001 })
+  const stepsRef = useCardStack<HTMLDivElement>({ breakpoint: 767, peek: 10, step: 300 })
+  const deliveryRef = useCardStack<HTMLDivElement>({ breakpoint: 767, peek: 8, step: 240 })
 
   return (
     <section className="section how" id="how">
@@ -27,20 +48,31 @@ export function HowWeWork() {
             <motion.span style={{ scaleX: reduce ? 1 : scaleX }} />
           </div>
 
-          <div className="how__steps">
-            {how.steps.map((step) => (
-              <Reveal className="how-step" key={step.num} delay={Number(step.num) * 0.04}>
-                <div className="how-step__num">{step.num}</div>
-                <h3 className="how-step__title">{step.title}</h3>
-                <p className="how-step__body">{step.body}</p>
-                <p className="how-step__out">
-                  <Check aria-hidden="true" />
-                  <span>
-                    <b>المخرج:</b> {step.output}
-                  </span>
-                </p>
-              </Reveal>
-            ))}
+          <div className="how__steps stack" ref={stepsRef}>
+            {how.steps.map((step, index) => {
+              const Icon = stepIcons[index] ?? Stethoscope
+              const tone = stepTones[index] ?? 'coral'
+              return (
+                <div className="stack__item" key={step.num}>
+                  <Reveal className="stack__card" delay={Number(step.num) * 0.04}>
+                    <div className={`how-step card-glow glow-${tone}`}>
+                      <span className="how-step__icon">
+                        <Icon aria-hidden="true" />
+                      </span>
+                      <div className="how-step__num">{step.num}</div>
+                      <h3 className="how-step__title">{step.title}</h3>
+                      <p className="how-step__body">{step.body}</p>
+                      <p className="how-step__out">
+                        <Check aria-hidden="true" />
+                        <span>
+                          <b>المخرج:</b> {step.output}
+                        </span>
+                      </p>
+                    </div>
+                  </Reveal>
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -48,17 +80,22 @@ export function HowWeWork() {
           <div className="delivery__head">
             <h3>{how.deliveryTitle}</h3>
           </div>
-          <div className="delivery__grid">
+          <div className="delivery__grid stack" ref={deliveryRef}>
             {how.delivery.map((item, index) => {
-              const Icon = icons[item.icon]
+              const Icon = deliveryIcons[item.icon]
+              const tone = deliveryTones[index] ?? 'coral'
               return (
-                <Reveal className="delivery-card" key={item.title} delay={index * 0.05}>
-                  <span className="delivery-card__icon">
-                    <Icon aria-hidden="true" />
-                  </span>
-                  <h4>{item.title}</h4>
-                  <p>{item.body}</p>
-                </Reveal>
+                <div className="stack__item" key={item.title}>
+                  <Reveal className="stack__card" delay={index * 0.05}>
+                    <article className={`delivery-card card-glow glow-${tone}`}>
+                      <span className="delivery-card__icon">
+                        <Icon aria-hidden="true" />
+                      </span>
+                      <h4>{item.title}</h4>
+                      <p>{item.body}</p>
+                    </article>
+                  </Reveal>
+                </div>
               )
             })}
           </div>
@@ -89,19 +126,33 @@ export function HowWeWork() {
           </table>
 
           <div className="compare__mobile">
-            {how.compare.map(([label, traditional, mastery]) => (
-              <div className="compare-card" key={label}>
-                <h4>{label}</h4>
-                <div className="compare-card__row">
-                  <span>التقليدي</span>
-                  <p>{traditional}</p>
-                </div>
-                <div className="compare-card__row">
-                  <span>مع ماستري</span>
-                  <p>{mastery}</p>
-                </div>
-              </div>
-            ))}
+            <Deck label="مقارنة التدريب التقليدي مع ماستري" autoMs={4500}>
+              {how.compare.map(([label, traditional, mastery], index) => {
+                const Icon = compareIcons[index] ?? Clock
+                return (
+                  <div className="compare-card" key={label}>
+                    <h4>
+                      <span className="compare-card__dim">
+                        <Icon aria-hidden="true" />
+                        {label}
+                      </span>
+                    </h4>
+                    <div className="compare-card__row">
+                      <span>
+                        <X aria-hidden="true" /> التقليدي
+                      </span>
+                      <p>{traditional}</p>
+                    </div>
+                    <div className="compare-card__row">
+                      <span>
+                        <Check aria-hidden="true" /> مع ماستري
+                      </span>
+                      <p>{mastery}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </Deck>
           </div>
         </div>
       </div>

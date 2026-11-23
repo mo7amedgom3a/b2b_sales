@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { story } from '../content/ar'
 import { Reveal } from '../motion/Reveal'
 import { Button } from '../ui/Button'
-import { Icon } from '../ui/Icon'
+import { Play } from 'lucide-react'
 import { Avatar } from '../ui/Avatar'
 import { SecHead } from '../ui/SecHead'
 import { Tag } from '../ui/Tag'
@@ -34,7 +34,7 @@ export function SuccessStory() {
           </Reveal>
 
           <Reveal delay={0.08}>
-            <div className="story-results">
+            <div className="story-results card-glow glow-purple">
               <div>
                 <p className="story-results__label">النتيجة — خلال 6 أشهر</p>
               </div>
@@ -65,7 +65,7 @@ export function SuccessStory() {
               />
               <button className="story-video__play" type="button" onClick={() => setOpen(true)}>
                 <span className="circle" aria-hidden="true">
-                  <Icon name="play" />
+                  <Play aria-hidden="true" />
                 </span>
                 {story.videoTitle}
               </button>
@@ -85,7 +85,7 @@ export function SuccessStory() {
               <div style={{ marginBlockStart: 18 }}>
                 <Button variant="soft" onClick={() => setOpen(true)}>
                   شاهد فيديو القصة
-                  <Icon name="play" size={16} />
+                  <Play size={16} aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -98,7 +98,7 @@ export function SuccessStory() {
           </div>
           <div className="testimonials__grid">
             {story.testimonials.map((item, index) => (
-              <Reveal className="testimonial" key={item.name} delay={index * 0.05}>
+              <Reveal className={`testimonial card-glow glow-${item.tone ?? 'coral'}`} key={item.name} delay={index * 0.05}>
                 <span className="testimonial__mark" aria-hidden="true">
                   ”
                 </span>
