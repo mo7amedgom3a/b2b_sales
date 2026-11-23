@@ -4,6 +4,17 @@ import { cn } from '../lib/cx'
 import { usePrefersReducedMotion } from '../hooks/usePrefersReducedMotion'
 import { useInViewAutoplay } from '../motion/useInViewAutoplay'
 
+/**
+ * Scroll the rail so card `index` fills it. Cards are 100% wide, so aligning
+ * the card's left edge with the rail's is both "center" and RTL-safe — and it
+ * never scrolls the document (unlike scrollIntoView).
+ */
+function scrollRailTo(rail: HTMLDivElement | null, index: number, behavior: ScrollBehavior) {
+  const card = rail?.children[index]
+  if (!rail || !(card instanceof HTMLElement)) return
+  rail.scrollTo({ left: card.offsetLeft, behavior })
+}
+
 type DeckProps = {
   children: ReactNode[]
   /** Accessible name for the deck. */
@@ -28,10 +39,7 @@ export function Deck({ children, label, className, autoMs = 4500 }: DeckProps) {
   const total = children.length
 
   const goTo = useCallback((index: number) => {
-    const rail = railRef.current
-    const card = rail?.children[index]
-    if (!rail || !(card instanceof HTMLElement)) return
-    card.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', inline: 'center', block: 'nearest' })
+    scrollRailTo(railRef.current, index, reduce ? 'auto' : 'smooth')
     setActive(index)
   }, [reduce])
 
@@ -60,11 +68,7 @@ export function Deck({ children, label, className, autoMs = 4500 }: DeckProps) {
     const timer = window.setInterval(() => {
       setActive((current) => {
         const next = (current + 1) % total
-        const rail = railRef.current
-        const card = rail?.children[next]
-        if (rail && card instanceof HTMLElement) {
-          card.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
-        }
+        scrollRailTo(railRef.current, next, 'smooth')
         return next
       })
     }, autoMs)

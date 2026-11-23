@@ -98,7 +98,7 @@ function ScoreRing({ value }: { value: number }) {
 
 function SimMock({ paused }: { paused: boolean }) {
   return (
-    <div className="mock rise card-glow glow-coral">
+    <div className="mock rise card-raised card-tone-coral">
       <div className="mock__top">
         <span>محاكاة بيع · تأمين</span>
         <Tag tone="green">مباشر</Tag>
@@ -145,7 +145,7 @@ function SimMock({ paused }: { paused: boolean }) {
 
 function LessonMock({ paused }: { paused: boolean }) {
   return (
-    <div className="mock rise card-glow glow-yellow">
+    <div className="mock rise card-raised card-tone-yellow">
       <div className="mock__top">
         <span>الدرس 03 · إدارة الاعتراضات</span>
         <Tag tone="soft">كوتش الدرس</Tag>
@@ -222,7 +222,7 @@ function McpMock({ paused }: { paused: boolean }) {
   }, [paused])
 
   return (
-    <div className="mock rise card-glow glow-purple" key={`mcp-${index}`}>
+    <div className="mock rise card-raised card-tone-purple" key={`mcp-${index}`}>
       <div className="mock__top">
         <span>Claude · MCP</span>
         <Tag tone="purple">اتصال آمن</Tag>

@@ -38,7 +38,7 @@ export function Problem() {
               return (
                 <div className="stack__item" key={card.title}>
                   <Reveal className="stack__card" delay={index * 0.04}>
-                    <article className={`problem-card problem-card--${card.tone} card-glow glow-${card.tone}`}>
+                    <article className={`problem-card problem-card--${card.tone} card-raised card-tone-${card.tone}`}>
                       <span className="problem-card__icon">
                         <Icon aria-hidden="true" />
                       </span>

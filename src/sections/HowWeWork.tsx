@@ -55,7 +55,7 @@ export function HowWeWork() {
               return (
                 <div className="stack__item" key={step.num}>
                   <Reveal className="stack__card" delay={Number(step.num) * 0.04}>
-                    <div className={`how-step card-glow glow-${tone}`}>
+                    <div className={`how-step card-raised card-tone-${tone}`}>
                       <span className="how-step__icon">
                         <Icon aria-hidden="true" />
                       </span>
@@ -87,7 +87,7 @@ export function HowWeWork() {
               return (
                 <div className="stack__item" key={item.title}>
                   <Reveal className="stack__card" delay={index * 0.05}>
-                    <article className={`delivery-card card-glow glow-${tone}`}>
+                    <article className={`delivery-card card-raised card-tone-${tone}`}>
                       <span className="delivery-card__icon">
                         <Icon aria-hidden="true" />
                       </span>

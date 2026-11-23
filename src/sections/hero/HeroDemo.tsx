@@ -15,6 +15,9 @@ import { useEffect, useState } from 'react'
 import { heroDemoSteps } from '../../content/ar'
 import type { HeroDemoKind } from '../../content/ar'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
+import { useDemoCourses } from '../../lib/demoCourses'
+import type { DemoCourse } from '../../lib/demoCourses'
+import { formatNumber } from '../../lib/format'
 import { useInViewAutoplay } from '../../motion/useInViewAutoplay'
 import { TypewriterChars } from '../../motion/TypewriterText'
 import { useExitGhosts, useTypewriter } from '../../motion/useTypewriter'
@@ -123,14 +126,26 @@ function SimResult() {
   )
 }
 
-const pathRows = [
-  { name: 'فهم اعتراضات التأمين', meta: 'الوحدة 1', done: true },
-  { name: 'التفاوض على الشروط', meta: 'الوحدة 2', done: true },
-  { name: 'محاكاة مع كوتش AI', meta: 'تمرين يومي', done: false },
-  { name: 'تطبيق على صفقة حقيقية', meta: 'الأسبوع 4', done: false },
+const fallbackPathRows = [
+  { name: 'فهم اعتراضات التأمين', meta: 'الوحدة 1', done: true, avatar: null },
+  { name: 'التفاوض على الشروط', meta: 'الوحدة 2', done: true, avatar: null },
+  { name: 'محاكاة مع كوتش AI', meta: 'تمرين يومي', done: false, avatar: null },
+  { name: 'تطبيق على صفقة حقيقية', meta: 'الأسبوع 4', done: false, avatar: null },
 ] as const
 
-function PathResult() {
+function toPathRows(courses: DemoCourse[]) {
+  if (courses.length < 2) return fallbackPathRows
+  return courses.slice(0, 4).map((course, index) => ({
+    name: course.title,
+    meta: `${formatNumber(course.lessons)} درساً`,
+    done: index < 2,
+    avatar: course.avatar,
+  }))
+}
+
+function PathResult({ courses }: { courses: DemoCourse[] }) {
+  const rows = toPathRows(courses)
+  const doneCount = rows.filter((row) => row.done).length
   return (
     <div className="res rise">
       <div className="res__head">
@@ -138,32 +153,38 @@ function PathResult() {
         <Tag tone="sky">4 أسابيع</Tag>
       </div>
       <div className="res-rows rise">
-        {pathRows.map((row) => (
+        {rows.map((row) => (
           <div className="res-row" key={row.name}>
             <span className={row.done ? 'res-row__box res-row__box--done' : 'res-row__box'}>
               {row.done ? <Check size={10} aria-hidden="true" /> : null}
             </span>
-            <span className="res-row__name">{row.name}</span>
+            <span className="res-row__name res-row__name--media">
+              {row.avatar ? (
+                <img className="demo-avatar" src={row.avatar} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              ) : null}
+              <span className="res-row__label">{row.name}</span>
+            </span>
             <span className="res-row__meta">{row.meta}</span>
           </div>
         ))}
       </div>
       <div className="res-legend">
-        <span><i style={{ background: 'var(--coral)' }} /> 2 من 4 مكتمل</span>
+        <span><i style={{ background: 'var(--coral)' }} /> {doneCount} من {rows.length} مكتمل</span>
         <span>مبني على فجوة الاعتراضات وقطاع التأمين</span>
       </div>
     </div>
   )
 }
 
-const trainRows = [
+const fallbackTrainRows = [
   {
     icon: Video,
     name: 'الدرس 12: إدارة الاعتراضات',
     meta: 'اليوم · 12 دقيقة',
     progress: 60,
-    chip: null,
+    chip: null as string | null,
     live: false,
+    image: null as string | null,
   },
   {
     icon: Bot,
@@ -172,6 +193,7 @@ const trainRows = [
     progress: 35,
     chip: 'سلسلة 12 يوماً',
     live: false,
+    image: null,
   },
   {
     icon: Radio,
@@ -180,10 +202,25 @@ const trainRows = [
     progress: 0,
     chip: 'مباشر',
     live: true,
+    image: null,
   },
 ] as const
 
-function TrainResult() {
+function toTrainRows(courses: DemoCourse[]) {
+  if (courses.length < 2) return fallbackTrainRows
+  return courses.slice(0, 3).map((course, index) => ({
+    icon: index === 2 ? Radio : index === 1 ? Bot : Video,
+    name: course.title,
+    meta: [course.duration, `${formatNumber(course.lessons)} درساً`].filter(Boolean).join(' · '),
+    progress: index === 0 ? 60 : index === 1 ? 35 : 0,
+    chip: index === 1 ? 'سلسلة 12 يوماً' : index === 2 ? 'مباشر' : null,
+    live: index === 2,
+    image: course.image,
+  }))
+}
+
+function TrainResult({ courses }: { courses: DemoCourse[] }) {
+  const rows = toTrainRows(courses)
   return (
     <div className="res rise">
       <div className="res__head">
@@ -191,13 +228,17 @@ function TrainResult() {
         <Tag tone="green">متجددة</Tag>
       </div>
       <div className="res-rows rise">
-        {trainRows.map((row) => {
+        {rows.map((row) => {
           const Icon = row.icon
           const ChipIcon = row.live ? Radio : Flame
           return (
             <div className="train-row" key={row.name}>
               <span className="train-row__icon">
-                <Icon aria-hidden="true" />
+                {row.image ? (
+                  <img src={row.image} alt="" loading="lazy" referrerPolicy="no-referrer" />
+                ) : (
+                  <Icon aria-hidden="true" />
+                )}
               </span>
               <span className="train-row__body">
                 <span className="train-row__name">{row.name}</span>
@@ -224,26 +265,42 @@ function TrainResult() {
   )
 }
 
-const rankRows = [
-  { name: 'أحمد العتيبي', value: 92 },
-  { name: 'سارة القحطاني', value: 84 },
-  { name: 'خالد الشمري', value: 76 },
-  { name: 'ريم الدوسري', value: 68 },
-  { name: 'عبدالله الحربي', value: 54 },
+const fallbackRankRows = [
+  { name: 'أحمد العتيبي', value: 92, image: null },
+  { name: 'سارة القحطاني', value: 84, image: null },
+  { name: 'خالد الشمري', value: 76, image: null },
+  { name: 'ريم الدوسري', value: 68, image: null },
+  { name: 'عبدالله الحربي', value: 54, image: null },
 ] as const
 
-function DashResult() {
+function toRankRows(courses: DemoCourse[]) {
+  if (courses.length < 3) return fallbackRankRows
+  const values = [92, 84, 76, 68, 54]
+  return courses.slice(0, 5).map((course, index) => ({
+    name: course.title,
+    value: values[index] ?? 50,
+    image: course.image,
+  }))
+}
+
+function DashResult({ courses }: { courses: DemoCourse[] }) {
+  const rows = toRankRows(courses)
   return (
     <div className="res rise">
       <div className="res__head">
-        <span className="res__title">أكثر 5 موظفي مبيعات نشاطاً</span>
+        <span className="res__title">أكثر 5 دورات إنجازاً</span>
         <Tag tone="yellow">هذا الشهر</Tag>
       </div>
       <div className="res-rank">
-        {rankRows.map((row, index) => (
+        {rows.map((row, index) => (
           <div className="res-rank__row" key={row.name}>
             <span className="res-rank__idx">{index + 1}</span>
-            <span className="res-rank__name">{row.name}</span>
+            <span className="res-rank__name res-rank__name--media">
+              {row.image ? (
+                <img className="demo-thumb" src={row.image} alt="" loading="lazy" referrerPolicy="no-referrer" />
+              ) : null}
+              <span className="res-rank__label">{row.name}</span>
+            </span>
             <span className="res-rank__track">
               <span
                 className="res-rank__bar"
@@ -255,19 +312,19 @@ function DashResult() {
         ))}
       </div>
       <div className="res-legend">
-        <span>نشاط التدريب خلال آخر 30 يوماً</span>
+        <span>إنجاز المتدربين خلال آخر 30 يوماً</span>
         <span>مثال توضيحي</span>
       </div>
     </div>
   )
 }
 
-function Result({ kind }: { kind: HeroDemoKind }) {
+function Result({ kind, courses }: { kind: HeroDemoKind; courses: DemoCourse[] }) {
   if (kind === 'gaps') return <GapsResult />
-  if (kind === 'path') return <PathResult />
-  if (kind === 'training') return <TrainResult />
+  if (kind === 'path') return <PathResult courses={courses} />
+  if (kind === 'training') return <TrainResult courses={courses} />
   if (kind === 'sim') return <SimResult />
-  return <DashResult />
+  return <DashResult courses={courses} />
 }
 
 export function HeroDemo() {
@@ -276,6 +333,7 @@ export function HeroDemo() {
   const [step, setStep] = useState(0)
   const [phase, setPhase] = useState<Phase>(reduce ? 'done' : 'typing')
   const [pressed, setPressed] = useState(false)
+  const { courses, live } = useDemoCourses(6)
 
   const current = heroDemoSteps[step] ?? heroDemoSteps[0]
   const { text, phase: twPhase } = useTypewriter([current.prompt], {
@@ -398,13 +456,14 @@ export function HeroDemo() {
             </div>
           ) : (
             <div key={`${step}-${isDone ? 'done' : 'preview'}`}>
-              <Result kind={current.kind} />
+              <Result kind={current.kind} courses={courses} />
             </div>
           )}
         </div>
 
         <p className="demo__hint">
           <Sparkles size={11} aria-hidden="true" />
+          {live ? 'دورات حقيقية من مكتبة ماستري — ' : ''}
           تفاعلي — اضغط أي بُعد لتجربته. يتوقف تلقائياً عند خروجه من الشاشة.
         </p>
       </div>

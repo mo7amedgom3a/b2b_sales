@@ -311,11 +311,15 @@ a { color: inherit; }
 }
 .hero__mark {
   display: inline;
-  background: var(--coral);
   color: var(--ink);
-  padding-inline: .12em;
+  padding-inline: .1em;
+  background-image: linear-gradient(var(--coral), var(--coral));
+  background-repeat: no-repeat;
+  background-position: 100% 0;
+  background-size: 0% 100%;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  animation: ma-mark-sweep .9s var(--ease-out) .35s forwards;
 }
 .hero__sub {
   margin-block-start: 16px;
@@ -768,7 +772,7 @@ a { color: inherit; }
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-block-start: 1px solid var(--line-strong);
+  margin-block-start: 28px;
 }
 .stat { padding: 22px 24px; border-inline-start: 1px solid var(--line); }
 .stat:first-child { border-inline-start: 0; padding-inline-start: 0; }
@@ -970,11 +974,15 @@ a { color: inherit; }
 .how__steps {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 0;
+  gap: 12px;
   margin-block-start: 0;
 }
-.how-step { padding: 22px 18px 0; border-inline-start: 1px solid var(--line); }
-.how-step:first-child { border-inline-start: 0; padding-inline-start: 0; }
+.how-step {
+  padding: 20px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
 .how-step__num {
   font-family: var(--font-arabic);
   font-size: 42px;
@@ -2149,27 +2157,9 @@ a { color: inherit; }
    ===================================================================== */
 
 /* ---------- Hero marker + right-to-left entrance ---------- */
-.hero__mark {
-  position: relative;
-  display: inline-block;
-  isolation: isolate;
-  padding-inline: .12em;
-  background: transparent;
-  color: var(--ink);
-}
-.hero__mark::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 2px;
-  background: var(--coral);
-  transform: scaleX(0);
-  transform-origin: right center;
-  animation: ma-mark-sweep .9s var(--ease-out) .35s forwards;
-}
+.hero__mark { color: var(--ink); }
 .hero__mark-text { position: relative; z-index: 1; }
-@keyframes ma-mark-sweep { to { transform: scaleX(1); } }
+@keyframes ma-mark-sweep { to { background-size: 100% 100%; } }
 
 .hero__copy.hero-enter { animation: none; }
 .hero__copy.hero-enter > * { animation: ma-hero-in .8s var(--ease-out) both; }
@@ -2302,40 +2292,6 @@ a { color: inherit; }
   .video-frame__play--center svg { width: 21px; height: 21px; }
 }
 
-/* ---------- Featured subscription glow ---------- */
-@property --plan-glow-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-.plan-slot { display: flex; min-width: 0; }
-.plan-slot > .plan { flex: 1; min-width: 0; }
-.plan-glow {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  padding: 2px;
-  border-radius: calc(var(--radius-card) + 2px);
-  background: conic-gradient(from var(--plan-glow-angle), var(--coral), var(--yellow), var(--pink), var(--coral));
-  animation: ma-plan-glow-spin 5s linear infinite;
-}
-.plan-glow::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: inherit;
-  filter: blur(22px);
-  opacity: .42;
-}
-.plan-glow > .plan { flex: 1; min-width: 0; border-color: transparent; }
-.plan-glow .plan--featured::before { display: none; }
-@keyframes ma-plan-glow-spin { to { --plan-glow-angle: 360deg; } }
-
 /* ---------- Circular (seamless) logo marquee ----------
    The marquee box itself must be LTR: under the page's RTL the max-content track
    anchors to the right edge, so sliding it left empties the right side instead of
@@ -2402,7 +2358,6 @@ a { color: inherit; }
 .trainer:hover, .testimonial:hover, .delivery-card:hover, .product-card:hover { transform: translateY(-2px); }
 .trainer:hover, .testimonial:hover, .delivery-card:hover, .addon:hover { border-color: var(--line-strong); }
 .plan:hover { border-color: var(--line-strong); }
-.plan-glow:hover .plan { border-color: transparent; }
 
 .delivery-card:hover .delivery-card__icon svg { animation: ma-icon-bounce .5s var(--ease-out); }
 .plan:hover .plan__feature svg { animation: ma-check-pop .4s var(--ease-out); }
@@ -2425,39 +2380,39 @@ a { color: inherit; }
 
 /* ---------- Reduced motion for the new effects ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .hero__mark::before { animation: none; transform: scaleX(1); }
+  .hero__mark { animation: none; background-size: 100% 100%; }
   .hero__copy.hero-enter > *,
   .hero__demo-wrap.hero-enter { animation: none !important; }
-  .video-glow, .plan-glow { animation: none; }
+  .video-glow { animation: none; }
   .video-glow::after { opacity: .28; }
-  .plan-glow::after { opacity: .22; }
+
   .video-frame__play--center::after { animation: none; opacity: 0; }
   .glass-panel, .glass-sheen { display: none; }
   .eyebrow__dot { animation: none; }
 }
 
-/* ---------- Circular logo belt ---------- */
-.logo-tile {
-  width: 84px;
-  height: 84px;
-  padding: 14px;
-  border-radius: var(--radius-full);
-  background: #fff;
-  border: 1px solid var(--line);
+/* ---------- Bare logo belt (logos only, no chips) ---------- */
+.marquee .logo-tile {
+  width: auto;
+  height: 48px;
+  padding: 0 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
   flex: none;
 }
-.logo-tile img {
-  max-height: 42px;
-  max-width: 54px;
+.marquee .logo-tile img {
+  max-height: 40px;
+  max-width: 128px;
   width: auto;
   height: auto;
   object-fit: contain;
 }
-.logo-tile:hover { transform: translateY(-2px) rotate(-4deg); }
-.marquee__group { gap: 12px; padding-inline-end: 12px; }
+.marquee .logo-tile:hover { transform: none; }
+.marquee__group { gap: 16px; padding-inline-end: 16px; }
 @media (max-width: 559px) {
-  .logo-tile { width: 70px; height: 70px; padding: 11px; }
-  .logo-tile img { max-height: 34px; max-width: 44px; }
+  .marquee .logo-tile { height: 40px; padding: 0 6px; }
+  .marquee .logo-tile img { max-height: 32px; max-width: 92px; }
 }
 
 /* ---------- Product cards with a real background image ---------- */
@@ -2563,32 +2518,27 @@ a { color: inherit; }
 .chart-panel__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .chart-panel__title { font-size: 11.5px; font-weight: 700; font-family: var(--font-arabic); }
 
-/* ---------- Card glow (tone-based, behind the card) ---------- */
-.card-glow { position: relative; isolation: isolate; }
-.card-glow::before {
-  content: "";
-  position: absolute;
-  inset: -10px;
-  z-index: -1;
-  border-radius: calc(var(--radius-card) + 10px);
-  background: var(--glow, var(--coral));
-  filter: blur(30px);
-  opacity: 0.13;
-  animation: ma-glow-breathe 9s ease-in-out infinite;
-  pointer-events: none;
+/* ---------- Elevated cards: solid surface + soft tone-tinted shadow ---------- */
+.card-raised {
+  position: relative;
+  box-shadow:
+    0 1px 2px rgba(23, 22, 27, 0.06),
+    0 18px 38px -24px color-mix(in srgb, var(--card-tone, var(--ink)) 58%, transparent);
+  transition: box-shadow .25s var(--ease-out), transform .25s var(--ease-out);
 }
-@keyframes ma-glow-breathe {
-  0%, 100% { opacity: 0.11; transform: scale(0.99); }
-  50% { opacity: 0.18; transform: scale(1.015); }
+.card-raised:hover {
+  box-shadow:
+    0 2px 4px rgba(23, 22, 27, 0.08),
+    0 26px 48px -24px color-mix(in srgb, var(--card-tone, var(--ink)) 66%, transparent);
 }
-.glow-coral { --glow: var(--coral); }
-.glow-yellow { --glow: var(--yellow); }
-.glow-lilac { --glow: var(--lilac); }
-.glow-sky { --glow: var(--sky); }
-.glow-purple { --glow: var(--purple); }
-.glow-green { --glow: var(--green); }
-.glow-teal { --glow: var(--teal); }
-.glow-ink { --glow: var(--text); }
+.card-tone-coral { --card-tone: var(--coral); }
+.card-tone-yellow { --card-tone: var(--yellow); }
+.card-tone-lilac { --card-tone: var(--lilac); }
+.card-tone-sky { --card-tone: var(--sky); }
+.card-tone-purple { --card-tone: var(--purple); }
+.card-tone-green { --card-tone: var(--green); }
+.card-tone-teal { --card-tone: var(--teal); }
+.card-tone-ink { --card-tone: var(--text); }
 
 /* ---------- Non-stop micro motion ---------- */
 .res-rank__bar, .dash__fill, .builder__bar .fill { position: relative; overflow: hidden; }
@@ -2618,7 +2568,12 @@ a { color: inherit; }
 .marquee:focus-within .marquee__track { animation-play-state: paused; }
 
 /* ---------- Accreditation band (authorities, full name + logo) ---------- */
-.hero__accreditations { border-block-start: 1px solid var(--line); background: var(--surface); }
+.hero__accreditations {
+  border-block-start: 1px solid var(--line);
+  background: var(--surface);
+  margin-block-start: clamp(26px, 3.4vw, 44px);
+  padding-block: 8px;
+}
 .accreditations {
   display: grid;
   grid-template-columns: 176px repeat(4, minmax(0, 1fr));
@@ -2683,8 +2638,14 @@ a { color: inherit; }
 }
 
 /* ---------- Swipe deck (compare cards on small screens) ---------- */
-.deck { position: relative; }
+.deck { position: relative; min-width: 0; }
+.compare__mobile { min-width: 0; }
+.reports__grid > * { min-width: 0; }
+.dash { min-width: 0; }
+.plans { min-width: 0; }
 .deck__rail {
+  width: 100%;
+  min-width: 0;
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -2819,7 +2780,7 @@ a { color: inherit; }
 /* ---------- Reduced motion for the round ---------- */
 @media (prefers-reduced-motion: reduce) {
   .tw-char, .tw-char--out, .tw-caret, .tw-caret.is-typing { animation: none; }
-  .card-glow::before { animation: none; opacity: 0.12; }
+  .card-raised, .card-raised:hover { transition: none; }
   .res-rank__bar::after, .dash__fill::after, .builder__bar .fill::after { animation: none; display: none; }
   .bubble--coach { animation: none; }
   .deck__rail { scroll-behavior: auto; }
@@ -2865,22 +2826,13 @@ a { color: inherit; }
 .stack__card > * { flex: 1; min-width: 0; }
 @media (max-width: 899px) {
   .how__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .how-step { border-inline-start: 1px solid var(--line); padding: 20px 16px 0; }
-  .stack__item:nth-child(odd) .how-step { border-inline-start: 0; padding-inline-start: 0; }
-  .stack__item:nth-child(n + 3) .how-step { border-block-start: 1px solid var(--line); margin-block-start: 20px; padding-block-start: 20px; }
 }
 .stack.is-stacked .stack__item,
 .stack.is-stacked .stack__card,
 .stack.is-stacked .stack__card > * { height: 100%; }
 .stack.is-stacked .how-step,
-.stack.is-stacked .delivery-card {
-  height: 100%;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-card);
-  background: var(--surface);
-  padding: 20px 18px;
-}
-.stack.is-stacked .stack__item:nth-child(n + 3) .how-step { margin-block-start: 0; border-block-start: 1px solid var(--line); padding-block-start: 20px; }
+.stack.is-stacked .delivery-card { height: 100%; }
+.stack.is-stacked .how-step { padding: 20px 18px; }
 .stack.is-stacked .how-step__num { font-size: 30px; }
 
 /* ---------- Reports: query bar focus + mobile spotlight ---------- */
@@ -2896,17 +2848,45 @@ a { color: inherit; }
 
 /* ---------- Remaining layout fixes for the enhancement round ---------- */
 .hero__title { font-size: clamp(30px, 3.3vw, 46px); line-height: 1.2; max-width: 14em; }
-.hero__demo-wrap.card-glow { border-radius: var(--radius-card); }
-.how-step:first-child { border-inline-start: 1px solid var(--line); padding-inline-start: 18px; }
-.stack__item:first-child .how-step { border-inline-start: 0; padding-inline-start: 0; }
+.hero__demo-wrap.card-raised { border-radius: var(--radius-card); }
 .booking__outcome { display: grid; grid-template-columns: 22px 18px minmax(0, 1fr); gap: 8px; align-items: start; }
 .booking__outcome svg { width: 14px; height: 14px; margin-block-start: 3px; color: var(--coral); flex: none; }
 .trainers__criteria span { display: inline-flex; align-items: center; gap: 6px; }
-.testimonial.card-glow { border-radius: var(--radius-card); }
-.product-card-wrap.card-glow { border-radius: var(--radius-card); }
+.testimonial.card-raised { border-radius: var(--radius-card); }
+.product-card-wrap.card-raised { border-radius: var(--radius-card); }
 .compare-card__row p { padding-inline-start: 16px; }
 .deck .compare-card { padding: 16px; }
 @media (max-width: 767px) {
   .dash__body { padding: 12px; }
   .dash__radar-chart .chart-panel__head { margin-block-end: 2px; }
+}
+
+/* ---------- Demo tables with real course media ---------- */
+.res-row__name--media { display: flex; align-items: center; gap: 6px; }
+.res-row__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.demo-avatar { width: 16px; height: 16px; border-radius: var(--radius-full); object-fit: cover; flex: none; }
+.demo-thumb { width: 18px; height: 18px; border-radius: 4px; object-fit: cover; flex: none; }
+.res-rank__name { width: 118px; display: flex; align-items: center; gap: 5px; }
+.res-rank__label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.train-row__icon { overflow: hidden; }
+.train-row__icon img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ---------- Stacked deck progress hairline ---------- */
+.stack.is-stacked::before,
+.stack.is-stacked::after {
+  content: "";
+  position: absolute;
+  inset-block-end: -16px;
+  height: 3px;
+  border-radius: var(--radius-full);
+}
+.stack.is-stacked::after {
+  inset-inline: 0;
+  background: var(--line);
+}
+.stack.is-stacked::before {
+  inset-inline-start: 0;
+  z-index: 1;
+  width: calc(var(--stack-progress, 0) * 100%);
+  background: var(--coral);
 }

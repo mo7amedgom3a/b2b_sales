@@ -14,7 +14,7 @@ const planTones: Record<string, string> = { start: 'sky', growth: 'purple', lead
 
 function PlanCard({ plan }: { plan: Plan }) {
   return (
-    <article className={cn('plan', plan.featured && 'plan--featured', 'card-glow', `glow-${planTones[plan.id] ?? 'coral'}`)}>
+    <article className={cn('plan', plan.featured && 'plan--featured', 'card-raised', `card-tone-${planTones[plan.id] ?? 'coral'}`)}>
       {plan.tag ? (
         <span className="plan__tag">
           <Tag tone="coral">{plan.tag}</Tag>
@@ -78,13 +78,7 @@ export function Pricing() {
         <Stagger className="plans">
           {pricing.plans.map((plan) => (
             <StaggerItem className="plan-slot" key={plan.id}>
-              {plan.featured ? (
-                <div className="plan-glow">
-                  <PlanCard plan={plan} />
-                </div>
-              ) : (
-                <PlanCard plan={plan} />
-              )}
+              <PlanCard plan={plan} />
             </StaggerItem>
           ))}
         </Stagger>
@@ -165,7 +159,7 @@ export function Pricing() {
 
           <div className="addons__grid">
             {pricing.addons.map((addon, index) => (
-              <Reveal className="addon card-glow glow-coral" key={addon.title} delay={index * 0.03}>
+              <Reveal className="addon card-raised card-tone-coral" key={addon.title} delay={index * 0.03}>
                 <div className="addon__index">0{index + 1}</div>
                 <h4>{addon.title}</h4>
                 <p>{addon.body}</p>
