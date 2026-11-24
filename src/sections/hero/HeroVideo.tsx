@@ -102,8 +102,35 @@ export function HeroVideo() {
         if (!stage || !frame) return
 
         const mm = gsap.matchMedia()
+        // Phones: no pinned stage. The hero fills the first screen, so the video
+        // is below the fold; it only animates in once its own area scrolls into view.
+        mm.add(MQ.mobile, () => {
+          gsap.set(frame, { transformPerspective: 900, transformOrigin: '50% 100%' })
+          gsap.fromTo(
+            frame,
+            { y: 70, scale: 0.84, rotateX: 22, autoAlpha: 0, borderRadius: 24 },
+            {
+              y: 0,
+              scale: 1,
+              rotateX: 0,
+              autoAlpha: 1,
+              borderRadius: 14,
+              ease: 'none',
+              scrollTrigger: { trigger: frame, start: 'top 98%', end: 'top 40%', scrub: 0.6 },
+            },
+          )
+          if (intro) {
+            gsap.fromTo(
+              intro,
+              { y: 24, autoAlpha: 0 },
+              { y: 0, autoAlpha: 1, ease: 'none', scrollTrigger: { trigger: intro, start: 'top 95%', end: 'top 65%', scrub: 0.6 } },
+            )
+          }
+        })
+
         mm.add({ mobile: MQ.mobile, desktop: '(min-width: 768px)' }, (context) => {
           const { mobile } = context.conditions as { mobile: boolean; desktop: boolean }
+          if (mobile) return
           track.classList.add('is-scrubbed')
 
           const startScale = mobile ? 1.12 : 1.32

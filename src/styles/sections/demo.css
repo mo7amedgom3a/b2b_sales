@@ -36,8 +36,8 @@
 .demo--v2 .demo__body { display: grid; gap: 14px; padding: clamp(14px, 2vw, 22px); }
 
 /* Five capabilities as one segmented rail with a sliding gradient glider */
-.demo--v2 .demo-rail-wrap { display: flex; justify-content: center; min-width: 0; }
-.demo--v2 .demo-rail {
+.demo-rail-wrap { display: flex; justify-content: center; min-width: 0; }
+.demo-rail {
   display: inline-flex;
   gap: 4px;
   max-width: 100%;
@@ -48,8 +48,8 @@
   border-radius: 999px;
   background: color-mix(in srgb, var(--text) 4%, var(--surface));
 }
-.demo--v2 .demo-rail::-webkit-scrollbar { display: none; }
-.demo--v2 .demo-rail__item {
+.demo-rail::-webkit-scrollbar { display: none; }
+.demo-rail__item {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -68,9 +68,9 @@
   isolation: isolate;
   transition: color .25s var(--ease-out);
 }
-.demo--v2 .demo-rail__item:hover { color: var(--text); }
-.demo--v2 .demo-rail__item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
-.demo--v2 .demo-rail__icon {
+.demo-rail__item:hover { color: var(--text); }
+.demo-rail__item:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.demo-rail__icon {
   display: grid;
   place-items: center;
   width: 36px;
@@ -80,9 +80,9 @@
   color: var(--text);
   transition: background-color .25s var(--ease-out), transform .25s var(--ease-out);
 }
-.demo--v2 .demo-rail__item:hover .demo-rail__icon { transform: rotate(-8deg) scale(1.06); }
-.demo--v2 .demo-rail__icon svg { width: 19px; height: 19px; }
-.demo--v2 .demo-rail__glider {
+.demo-rail__item:hover .demo-rail__icon { transform: rotate(-8deg) scale(1.06); }
+.demo-rail__icon svg { width: 19px; height: 19px; }
+.demo-rail__glider {
   position: absolute;
   inset: 0;
   z-index: -1;
@@ -92,12 +92,12 @@
   box-shadow: 0 10px 28px -10px color-mix(in srgb, var(--coral) 75%, transparent);
 }
 /* Active: ink on the warm gradient, so the icon never matches its background. */
-.demo--v2 .demo-rail__item.is-active { color: var(--ink); }
-.demo--v2 .demo-rail__item.is-active .demo-rail__icon { background: rgba(255, 255, 255, .55); color: var(--ink); }
-.demo--v2 .demo-rail__item.is-active .demo-rail__icon svg { animation: ma-step-breathe 2.6s var(--ease-out) infinite; }
+.demo-rail__item.is-active { color: var(--ink); }
+.demo-rail__item.is-active .demo-rail__icon { background: rgba(255, 255, 255, .55); color: var(--ink); }
+.demo-rail__item.is-active .demo-rail__icon svg { animation: ma-step-breathe 2.6s var(--ease-out) infinite; }
 @keyframes ma-step-breathe { 0%, 100% { transform: none; } 30% { transform: scale(1.14) rotate(-6deg); } 55% { transform: scale(1); } }
 /* Time left on this step */
-.demo--v2 .demo-rail__timer {
+.demo-rail__timer {
   position: absolute;
   inset-inline: 14px;
   inset-block-end: 5px;
@@ -229,11 +229,11 @@
 .dres-score__chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 
 @media (max-width: 767px) {
-  .demo--v2 .demo-rail-wrap { justify-content: flex-start; margin-inline: -4px; }
-  .demo--v2 .demo-rail { scroll-snap-type: x proximity; }
-  .demo--v2 .demo-rail__item { min-height: 44px; padding-inline: 6px 12px; font-size: 13px; scroll-snap-align: center; }
-  .demo--v2 .demo-rail__icon { width: 32px; height: 32px; }
-  .demo--v2 .demo-rail__icon svg { width: 17px; height: 17px; }
+  .demo-rail-wrap { justify-content: flex-start; margin-inline: -4px; }
+  .demo-rail { scroll-snap-type: x proximity; }
+  .demo-rail__item { min-height: 44px; padding-inline: 6px 12px; font-size: 13px; scroll-snap-align: center; }
+  .demo-rail__icon { width: 32px; height: 32px; }
+  .demo-rail__icon svg { width: 17px; height: 17px; }
   .demo--v2 .demo__status .ma-tag { display: none; }
   .demo--v2 .demo__result--v2 { min-height: 420px; }
   .dres__split, .dres__split--sim { grid-template-columns: 1fr; }
@@ -259,7 +259,7 @@
   .dres-ring--lg { width: 130px; height: 130px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .demo--v2 .demo-rail__item.is-active .demo-rail__icon svg, .dres-card__icon svg, .demo--v2 .demo-rail__timer { animation: none; }
+  .demo-rail__item.is-active .demo-rail__icon svg, .dres-card__icon svg, .demo-rail__timer { animation: none; }
   .demo--v2 .demo__answer, .dres-people__item, .dres-step, .dres-card, .dres-chat .bubble { animation: none; }
 }
 

@@ -79,7 +79,9 @@
 
 @media (max-width: 767px) {
   .hero-video__frame { --frame-w: calc(100vw - 32px); border-radius: 14px; }
-  .hero-video__track.is-scrubbed { height: 180svh; }
+  /* Not pinned on phones: title, then the player, animating in once scrolled to. */
+  .hero-video__stage { gap: 18px; padding-block: 12px 44px; }
+  .hero-video__frame { box-shadow: 0 28px 60px -22px rgba(23, 22, 27, .5), 0 0 0 1px var(--line); }
   .hero-video__title { font-size: 22px; }
   .hero-video__speakers { font-size: 13px; }
 }

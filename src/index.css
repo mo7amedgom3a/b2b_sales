@@ -5,6 +5,7 @@
 @import "./styles/sections/proof.css";
 @import "./styles/sections/gaps.css";
 @import "./styles/sections/offer.css";
+@import "./styles/sections/reports.css";
 
 /* ---------------------------------------------------------------
    Mastery Academy — B2B landing page
@@ -2703,7 +2704,8 @@ a { color: inherit; }
   .res-cell, .demo__send, .demo__tag, .video-frame__play, .story-video__play, .wa-fab,
   .faq-item__trigger[data-state="open"] .faq-item__icon, .product-card__arrow, .booking .form-card .ma-btn,
   .proof, .gap-card__icon, .gaps-turnover__icon, .offer-node__orb,
-  .demo-rail__item.is-active, .dres-people__icon, .dres-step.is-done .dres-step__icon, .dres-card__icon
+  .demo-rail__item.is-active, .dres-people__icon, .dres-step.is-done .dres-step__icon, .dres-card__icon,
+  .rep-kpi__icon, .rep-skill__icon, .rep-feature.is-lit .rep-feature__icon, .rep-view__note
 ) svg.lucide { color: currentColor; }
 .booking .form-card svg.lucide { color: var(--icon); }
 

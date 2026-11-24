@@ -1,4 +1,4 @@
-import { ArrowRight, Clock3 } from 'lucide-react'
+import { ArrowRight, ChevronDown, Clock3, PlayCircle } from 'lucide-react'
 import { hero } from '../../content/ar'
 import { Button } from '../../ui/Button'
 import { HeroRotator } from './HeroRotator'
@@ -29,6 +29,12 @@ export function Hero() {
             {hero.note}
           </p>
         </div>
+        {/* Phones: the video sits below the first screen; this invites the scroll to it. */}
+        <a className="hero__scroll-cue" href="#video">
+          <PlayCircle aria-hidden="true" />
+          شاهد الفيديو
+          <ChevronDown className="hero__scroll-cue-arrow" aria-hidden="true" />
+        </a>
       </div>
 
       <HeroVideo />
