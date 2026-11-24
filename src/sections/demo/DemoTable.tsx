@@ -2,13 +2,11 @@ import {
   Activity,
   Bot,
   CalendarDays,
-  Check,
   Flame,
   Gauge,
   GraduationCap,
   Info,
   Keyboard,
-  LayoutDashboard,
   MousePointerClick,
   Radio,
   RefreshCw,
@@ -16,13 +14,26 @@ import {
   SendHorizontal,
   Sparkles,
   Stethoscope,
-  Timer,
+  Target,
   UsersRound,
   Video,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import type { LucideIcon } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { motion } from 'motion/react'
+import {
+  Bar,
+  BarChart,
+  Cell,
+  LabelList,
+  PolarAngleAxis,
+  RadialBar,
+  RadialBarChart,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { demoPeople, heroDemoSteps } from '../../content/ar'
 import type { HeroDemoKind } from '../../content/ar'
 import { useDemoCourses } from '../../lib/demoCourses'
@@ -32,303 +43,289 @@ import { useInViewAutoplay } from '../../motion/useInViewAutoplay'
 import { TypewriterChars } from '../../motion/TypewriterText'
 import { useDemoSequence } from '../../motion/useDemoSequence'
 import { Avatar } from '../../ui/Avatar'
-import { ScrollArrows } from '../../ui/ScrollArrows'
 import { Tag } from '../../ui/Tag'
 import { AnimateIcon, AnimatedAlert, AnimatedCheck, AnimatedMinus } from '../../ui/animated-icons'
 
 const prompts = heroDemoSteps.map((step) => step.prompt)
 
-const stepIcons = {
+const stepIcons: Record<HeroDemoKind, LucideIcon> = {
   gaps: Stethoscope,
   path: Route,
   training: GraduationCap,
   sim: Bot,
   dash: Gauge,
-} as const
-
-const skillLabels: Record<string, string> = {
-  gap: 'فجوة',
-  mid: 'متوسط',
-  good: 'قوي',
 }
 
-const gapRows = [
-  { name: 'أحمد', cells: ['good', 'mid', 'gap', 'mid'] },
-  { name: 'سارة', cells: ['mid', 'good', 'gap', 'good'] },
-  { name: 'خالد', cells: ['gap', 'mid', 'gap', 'mid'] },
-  { name: 'ريم', cells: ['good', 'good', 'mid', 'gap'] },
+/** Chart animations: slow enough to read as "the answer drawing itself". */
+const CHART_ANIM = { isAnimationActive: true, animationDuration: 1300, animationEasing: 'ease-out' } as const
+/** Every looping icon replays on the same beat as the charts. */
+const ICON_LOOP = 2600
+
+const axisTick = { fill: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-body)' } as const
+
+/* ---------- تشخيص: team level per skill (bar chart) + who has the gap ---------- */
+
+const skillScores = [
+  { skill: 'التنقيب', score: 71, tone: 'good' },
+  { skill: 'الإقناع', score: 64, tone: 'mid' },
+  { skill: 'الاعتراضات', score: 41, tone: 'gap' },
+  { skill: 'الإغلاق', score: 58, tone: 'mid' },
 ] as const
 
-const skills = ['تنقيب', 'إقناع', 'اعتراضات', 'إغلاق'] as const
+const toneColor = { good: 'var(--green)', mid: 'var(--yellow)', gap: 'var(--coral)' } as const
+
+const gapPeople = [
+  { person: demoPeople[0], status: 'gap' },
+  { person: demoPeople[1], status: 'gap' },
+  { person: demoPeople[2], status: 'mid' },
+  { person: demoPeople[3], status: 'good' },
+] as const
+
+const gapsConfig = { score: { label: 'مستوى الفريق' } } satisfies ChartConfig
+
+function StatusIcon({ status, delay }: { status: 'gap' | 'mid' | 'good'; delay: number }) {
+  return (
+    <AnimateIcon loop={ICON_LOOP} loopDelay={delay} animateOnHover={false}>
+      {status === 'gap' ? <AnimatedAlert size={16} /> : status === 'mid' ? <AnimatedMinus size={16} /> : <AnimatedCheck size={16} />}
+    </AnimateIcon>
+  )
+}
 
 function GapsResult() {
   return (
-    <div className="res rise">
-      <div className="res__head">
-        <span className="res__title">فجوات فريق المبيعات</span>
-        <Tag tone="coral">إدارة الاعتراضات</Tag>
+    <div className="dres">
+      <div className="dres__head">
+        <span className="dres__title">مستوى فريق المبيعات في كل مهارة</span>
+        <Tag tone="coral">الفجوة: إدارة الاعتراضات</Tag>
       </div>
-      <div className="res-matrix">
-        <span className="res-matrix__head">موظف المبيعات</span>
-        {skills.map((skill) => (
-          <span className="res-matrix__head" key={skill}>
-            {skill}
-          </span>
-        ))}
-        {gapRows.map((row) => (
-          <FragmentRow key={row.name} name={row.name} cells={row.cells} />
-        ))}
-      </div>
-      <div className="res-legend">
-        <span><i style={{ background: 'var(--coral)' }} /> فجوة حرجة</span>
-        <span><i style={{ background: 'var(--yellow)' }} /> تحتاج تدريباً</span>
-        <span><i style={{ background: 'var(--green)' }} /> جدارة قوية</span>
-      </div>
-    </div>
-  )
-}
-
-function FragmentRow({ name, cells }: { name: string; cells: readonly string[] }) {
-  return (
-    <>
-      <span className="res-matrix__name">{name}</span>
-      {cells.map((cell, index) => (
-        <span
-          className={`res-cell res-cell--${cell}`}
-          key={`${name}-${index}`}
-          role="img"
-          aria-label={`${name}: ${skills[index]} — ${skillLabels[cell] ?? cell}`}
-        >
-          <AnimateIcon animateOnHover>
-            {cell === 'gap' ? (
-              <AnimatedAlert size={12} />
-            ) : cell === 'mid' ? (
-              <AnimatedMinus size={12} />
-            ) : (
-              <AnimatedCheck size={12} />
-            )}
-          </AnimateIcon>
-        </span>
-      ))}
-    </>
-  )
-}
-
-function SimResult() {
-  return (
-    <div className="res rise">
-      <div className="res__head">
-        <span className="res__title">محاكاة: اعتراض السعر</span>
-        <Tag tone="green">تقييم فوري</Tag>
-      </div>
-      <div className="res-chat rise">
-        <span className="bubble bubble--bot">العميل: السعر أعلى من الميزانية، لماذا أدفع أكثر؟</span>
-        <span className="bubble bubble--user">أحمد: أتفهم ذلك. دعنا نقارن تكلفة التأخير بقيمة الحل…</span>
-        <span className="bubble bubble--coach">كوتش: جيد جداً. وضّح العائد قبل عرض الخصم.</span>
-      </div>
-      <div className="score">
-        <div className="score__ring" aria-hidden="true">
-          <svg viewBox="0 0 52 52">
-            <circle className="track" cx="26" cy="26" r="22" />
-            <circle className="bar" cx="26" cy="26" r="22" />
-          </svg>
-          <span className="score__num">82</span>
-        </div>
-        <div className="score__body">
-          <b>أداء المحاكاة</b>
-          <span>تفاوض على القيمة</span>
-          <div className="score__chips">
-            <Tag tone="green">وضوح القيمة</Tag>
-            <Tag tone="yellow">إغلاق</Tag>
-          </div>
-        </div>
+      <div className="dres__split">
+        <ChartContainer config={gapsConfig} className="dres__chart" aria-label="مستوى الفريق: التنقيب 71، الإقناع 64، الاعتراضات 41، الإغلاق 58">
+          <BarChart data={[...skillScores]} margin={{ top: 26, right: 8, left: 8, bottom: 0 }} barCategoryGap="22%">
+            <XAxis dataKey="skill" reversed tickLine={false} axisLine={false} tick={axisTick} tickMargin={10} />
+            <YAxis hide domain={[0, 100]} />
+            <Bar dataKey="score" radius={[10, 10, 4, 4]} {...CHART_ANIM}>
+              {skillScores.map((item) => (
+                <Cell key={item.skill} fill={toneColor[item.tone]} />
+              ))}
+              <LabelList dataKey="score" position="top" offset={8} className="dres__bar-label" formatter={(value) => `${value}%`} />
+            </Bar>
+          </BarChart>
+        </ChartContainer>
+        <ul className="dres-people">
+          {gapPeople.map(({ person, status }, index) => (
+            <li className={`dres-people__item dres-people__item--${status}`} key={person.id} style={{ animationDelay: `${120 + index * 70}ms` }}>
+              <Avatar initial={person.initial} tone={person.tone} size={34} />
+              <span className="dres-people__body">
+                <b>{person.first}</b>
+                <span>{status === 'gap' ? 'فجوة في الاعتراضات' : status === 'mid' ? 'يحتاج تدريباً' : 'جدارة قوية'}</span>
+              </span>
+              <span className="dres-people__icon">
+                <StatusIcon status={status} delay={index * 220} />
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   )
 }
 
-const fallbackPathRows = [
-  { name: 'فهم اعتراضات التأمين', meta: 'الوحدة 1', done: true, avatar: null },
-  { name: 'التفاوض على الشروط', meta: 'الوحدة 2', done: true, avatar: null },
-  { name: 'محاكاة مع كوتش AI', meta: 'تمرين يومي', done: false, avatar: null },
-  { name: 'تطبيق على صفقة حقيقية', meta: 'الأسبوع 4', done: false, avatar: null },
+/* ---------- مسار: four modules as connected columns ---------- */
+
+const fallbackModules = [
+  { name: 'فهم اعتراضات التأمين', meta: 'الأسبوع 1', done: true },
+  { name: 'التفاوض على الشروط', meta: 'الأسبوع 2', done: true },
+  { name: 'محاكاة مع كوتش AI', meta: 'الأسبوع 3', done: false },
+  { name: 'تطبيق على صفقة حقيقية', meta: 'الأسبوع 4', done: false },
 ] as const
 
-function toPathRows(courses: DemoCourse[]) {
-  if (courses.length < 2) return fallbackPathRows
+const moduleIcons: LucideIcon[] = [Target, UsersRound, Bot, Flame]
+
+function toModules(courses: DemoCourse[]) {
+  if (courses.length < 4) return fallbackModules
   return courses.slice(0, 4).map((course, index) => ({
     name: course.title,
-    meta: `${formatNumber(course.lessons)} درساً`,
+    meta: `الأسبوع ${index + 1} · ${formatNumber(course.lessons)} درساً`,
     done: index < 2,
-    avatar: course.avatar,
   }))
 }
 
 function PathResult({ courses }: { courses: DemoCourse[] }) {
-  const rows = toPathRows(courses)
-  const doneCount = rows.filter((row) => row.done).length
+  const modules = toModules(courses)
   return (
-    <div className="res rise">
-      <div className="res__head">
-        <span className="res__title">مسار: موظف مبيعات تأمين ميداني</span>
+    <div className="dres">
+      <div className="dres__head">
+        <span className="dres__title">مسار: موظف مبيعات تأمين ميداني</span>
         <Tag tone="sky">4 أسابيع</Tag>
       </div>
-      <div className="res-rows rise">
-        {rows.map((row) => (
-          <div className="res-row" key={row.name}>
-            <span className={row.done ? 'res-row__box res-row__box--done' : 'res-row__box'}>
-              {row.done ? <Check size={10} aria-hidden="true" /> : null}
-            </span>
-            <span className="res-row__name res-row__name--media">
-              {row.avatar ? (
-                <img className="demo-avatar" src={row.avatar} alt="" loading="lazy" referrerPolicy="no-referrer" />
-              ) : null}
-              <span className="res-row__label">{row.name}</span>
-            </span>
-            <span className="res-row__meta">{row.meta}</span>
-          </div>
-        ))}
-      </div>
-      <div className="res-legend">
-        <span><i style={{ background: 'var(--coral)' }} /> {doneCount} من {rows.length} مكتمل</span>
-        <span>مبني على فجوة الاعتراضات وقطاع التأمين</span>
-      </div>
+      <ol className="dres-steps">
+        {modules.map((module, index) => {
+          const Icon = moduleIcons[index] ?? Target
+          return (
+            <li
+              className={module.done ? 'dres-step is-done' : 'dres-step'}
+              key={module.name}
+              style={{ animationDelay: `${index * 90}ms` }}
+            >
+              <span className="dres-step__icon">
+                <Icon aria-hidden="true" />
+              </span>
+              <span className="dres-step__meta">{module.meta}</span>
+              <span className="dres-step__name">{module.name}</span>
+              <span className="dres-step__state">
+                {module.done ? (
+                  <AnimateIcon loop={ICON_LOOP} loopDelay={index * 260} animateOnHover={false}>
+                    <AnimatedCheck size={14} />
+                  </AnimateIcon>
+                ) : (
+                  <span className="dres-step__dot" aria-hidden="true" />
+                )}
+                {module.done ? 'مكتمل' : 'قادم'}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+      <p className="dres__foot">
+        <Sparkles aria-hidden="true" /> مبني على فجوة الاعتراضات وقطاع التأمين
+      </p>
     </div>
   )
 }
 
-const fallbackTrainRows = [
-  {
-    icon: Video,
-    name: 'الدرس 12: إدارة الاعتراضات',
-    meta: 'اليوم · 12 دقيقة',
-    progress: 60,
-    chip: null as string | null,
-    live: false,
-    image: null as string | null,
-  },
-  {
-    icon: Bot,
-    name: 'محاكاة يومية مع كوتش AI',
-    meta: 'كل يوم · 10 دقائق',
-    progress: 35,
-    chip: 'سلسلة 12 يوماً',
-    live: false,
-    image: null,
-  },
-  {
-    icon: Radio,
-    name: 'بث مباشر: تفاوض متقدم',
-    meta: 'الخميس · 60 دقيقة',
-    progress: 0,
-    chip: 'مباشر',
-    live: true,
-    image: null,
-  },
+/* ---------- التدريب: three formats as cards, each with a radial progress ---------- */
+
+const fallbackFormats = [
+  { icon: Video, name: 'الدرس 12: إدارة الاعتراضات', meta: 'اليوم · 12 دقيقة', progress: 60, tone: 'coral' },
+  { icon: Bot, name: 'محاكاة يومية مع كوتش AI', meta: 'سلسلة 12 يوماً', progress: 35, tone: 'yellow' },
+  { icon: Radio, name: 'بث مباشر: تفاوض متقدم', meta: 'الخميس · 60 دقيقة', progress: 8, tone: 'sky' },
 ] as const
 
-function toTrainRows(courses: DemoCourse[]) {
-  if (courses.length < 2) return fallbackTrainRows
-  return courses.slice(0, 3).map((course, index) => ({
-    icon: index === 2 ? Radio : index === 1 ? Bot : Video,
-    name: course.title,
-    meta: [course.duration, `${formatNumber(course.lessons)} درساً`].filter(Boolean).join(' · '),
-    progress: index === 0 ? 60 : index === 1 ? 35 : 0,
-    chip: index === 1 ? 'سلسلة 12 يوماً' : index === 2 ? 'مباشر' : null,
-    live: index === 2,
-    image: course.image,
-  }))
+function toFormats(courses: DemoCourse[]) {
+  if (courses.length < 3) return fallbackFormats
+  return fallbackFormats.map((format, index) =>
+    index === 0 ? { ...format, name: courses[0]?.title ?? format.name } : format,
+  )
+}
+
+function RadialProgress({ value, tone, label }: { value: number; tone: string; label: string }) {
+  const config = { value: { label, color: `var(--${tone})` } } satisfies ChartConfig
+  return (
+    <ChartContainer config={config} className="dres-ring" aria-label={`${label}: ${value}%`}>
+      <RadialBarChart data={[{ value }]} startAngle={90} endAngle={-270} innerRadius="74%" outerRadius="100%">
+        <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
+        <RadialBar dataKey="value" cornerRadius={20} fill="var(--color-value)" background={{ fill: 'var(--fill-soft, rgba(23,22,27,.08))' }} {...CHART_ANIM} />
+      </RadialBarChart>
+    </ChartContainer>
+  )
 }
 
 function TrainResult({ courses }: { courses: DemoCourse[] }) {
-  const rows = toTrainRows(courses)
+  const formats = toFormats(courses)
   return (
-    <div className="res rise">
-      <div className="res__head">
-        <span className="res__title">خطة تدريب الأسبوع</span>
-        <Tag tone="green">متجددة</Tag>
+    <div className="dres">
+      <div className="dres__head">
+        <span className="dres__title">خطة تدريب الأسبوع</span>
+        <Tag tone="green">15 دقيقة يومياً</Tag>
       </div>
-      <div className="res-rows rise">
-        {rows.map((row) => {
-          const Icon = row.icon
-          const ChipIcon = row.live ? Radio : Flame
+      <div className="dres-cards">
+        {formats.map((format, index) => {
+          const Icon = format.icon
           return (
-            <div className="train-row" key={row.name}>
-              <span className="train-row__icon">
-                {row.image ? (
-                  <img src={row.image} alt="" loading="lazy" referrerPolicy="no-referrer" />
-                ) : (
+            <article className="dres-card" key={format.name} style={{ animationDelay: `${index * 90}ms` }}>
+              <div className="dres-card__visual">
+                <RadialProgress value={format.progress} tone={format.tone} label={format.name} />
+                <span className={`dres-card__icon dres-card__icon--${format.tone}`}>
                   <Icon aria-hidden="true" />
-                )}
-              </span>
-              <span className="train-row__body">
-                <span className="train-row__name">{row.name}</span>
-                <span className="train-row__meta">{row.meta}</span>
-                <span className="train-row__track">
-                  <span className="train-row__fill" style={{ width: `${row.progress}%` }} />
                 </span>
-              </span>
-              {row.chip ? (
-                <span className={row.live ? 'train-row__chip train-row__chip--live' : 'train-row__chip'}>
-                  <ChipIcon aria-hidden="true" />
-                  {row.chip}
-                </span>
-              ) : null}
-            </div>
+              </div>
+              <b className="dres-card__name">{format.name}</b>
+              <span className="dres-card__meta">{format.meta}</span>
+              <span className="dres-card__pct">{formatNumber(format.progress)}%</span>
+            </article>
           )
         })}
       </div>
-      <div className="res-legend">
-        <span>
-          <RefreshCw size={11} aria-hidden="true" /> تتحدث الخطة أسبوعياً حسب تشخيص الفريق
-        </span>
-        <span>
-          <Info size={11} aria-hidden="true" /> مثال توضيحي
-        </span>
+      <p className="dres__foot">
+        <RefreshCw aria-hidden="true" /> تتحدث الخطة أسبوعياً حسب تشخيص الفريق
+      </p>
+    </div>
+  )
+}
+
+/* ---------- كوتش: the exchange + a radial score ---------- */
+
+function SimResult() {
+  const config = { score: { label: 'أداء المحاكاة', color: 'var(--green)' } } satisfies ChartConfig
+  return (
+    <div className="dres">
+      <div className="dres__head">
+        <span className="dres__title">محاكاة: اعتراض السعر</span>
+        <Tag tone="green">تقييم فوري</Tag>
+      </div>
+      <div className="dres__split dres__split--sim">
+        <div className="dres-chat">
+          <span className="bubble bubble--bot">العميل: السعر أعلى من الميزانية، لماذا أدفع أكثر؟</span>
+          <span className="bubble bubble--user">أحمد: أتفهم ذلك. دعنا نقارن تكلفة التأخير بقيمة الحل…</span>
+          <span className="bubble bubble--coach">كوتش: جيد جداً. وضّح العائد قبل عرض الخصم.</span>
+        </div>
+        <div className="dres-score">
+          <div className="dres-score__ring">
+            <ChartContainer config={config} className="dres-ring dres-ring--lg" aria-label="أداء المحاكاة 82 من 100">
+              <RadialBarChart data={[{ score: 82 }]} startAngle={90} endAngle={-270} innerRadius="78%" outerRadius="100%">
+                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} axisLine={false} />
+                <RadialBar dataKey="score" cornerRadius={20} fill="var(--color-score)" background={{ fill: 'var(--fill-soft, rgba(23,22,27,.08))' }} {...CHART_ANIM} />
+              </RadialBarChart>
+            </ChartContainer>
+            <span className="dres-score__num">82</span>
+          </div>
+          <b>أداء المحاكاة</b>
+          <div className="dres-score__chips">
+            <Tag tone="green">وضوح القيمة</Tag>
+            <Tag tone="yellow">الإغلاق</Tag>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
 
+/* ---------- لوحة المؤشرات: training hours per person (horizontal bars) ---------- */
+
+const dashConfig = { hours: { label: 'ساعات التدريب', color: 'var(--coral)' } } satisfies ChartConfig
+
 function DashResult() {
-  // Same team as the question: the 5 most active sales reps this month.
-  const rows = [...demoPeople].sort((a, b) => b.hours - a.hours).slice(0, 5)
+  const rows = [...demoPeople]
+    .sort((a, b) => b.hours - a.hours)
+    .slice(0, 5)
+    .map((person) => ({ name: person.first, hours: person.hours }))
   return (
-    <div className="res rise">
-      <div className="res__head">
-        <span className="res__title">
-          <UsersRound size={13} aria-hidden="true" /> أكثر 5 موظفي مبيعات نشاطاً
+    <div className="dres">
+      <div className="dres__head">
+        <span className="dres__title">
+          <UsersRound aria-hidden="true" /> أكثر 5 موظفي مبيعات نشاطاً
         </span>
         <Tag tone="yellow" icon={<CalendarDays aria-hidden="true" />}>هذا الشهر</Tag>
       </div>
-      <div className="res-rank">
-        {rows.map((person, index) => (
-          <div className="res-rank__row" key={person.id} style={{ animationDelay: `${index * 80}ms` }}>
-            <span className="res-rank__idx">{index + 1}</span>
-            <span className="res-rank__name res-rank__name--media">
-              <Avatar initial={person.initial} tone={person.tone} size={20} />
-              <span className="res-rank__label">{person.name}</span>
-            </span>
-            <span className="res-rank__track">
-              <span
-                className="res-rank__bar"
-                style={{ width: `${person.completion}%`, animationDelay: `${index * 80}ms` }}
-              />
-            </span>
-            <span className="res-rank__val">
-              <Timer size={10} aria-hidden="true" /> {formatNumber(person.hours)} س
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="res-legend">
-        <span>
-          <Activity size={11} aria-hidden="true" /> مرتّبون حسب ساعات التدريب خلال آخر 30 يوماً
-        </span>
-        <span>
-          <Info size={11} aria-hidden="true" /> مثال توضيحي
-        </span>
-      </div>
+      <ChartContainer
+        config={dashConfig}
+        className="dres__chart dres__chart--wide"
+        aria-label={rows.map((row) => `${row.name} ${row.hours} ساعة`).join('، ')}
+      >
+        <BarChart data={rows} margin={{ top: 28, right: 8, left: 8, bottom: 0 }} barCategoryGap="20%">
+          <XAxis dataKey="name" reversed tickLine={false} axisLine={false} tick={{ ...axisTick, fontSize: 13 }} tickMargin={10} />
+          <YAxis hide domain={[0, 'dataMax + 2']} />
+          <Bar dataKey="hours" radius={[10, 10, 4, 4]} {...CHART_ANIM}>
+            {rows.map((row, index) => (
+              <Cell key={row.name} fill={index === 0 ? 'var(--coral)' : 'color-mix(in srgb, var(--coral) 50%, var(--surface))'} />
+            ))}
+            <LabelList dataKey="hours" position="top" offset={8} className="dres__bar-label" formatter={(value) => `${value} س`} />
+          </Bar>
+        </BarChart>
+      </ChartContainer>
+      <p className="dres__foot">
+        <Activity aria-hidden="true" /> مرتّبون حسب ساعات التدريب خلال آخر 30 يوماً
+      </p>
     </div>
   )
 }
@@ -341,17 +338,19 @@ function Result({ kind, courses }: { kind: HeroDemoKind; courses: DemoCourse[] }
   return <DashResult />
 }
 
-export function HeroDemo() {
+export function DemoTable() {
   const { ref, paused, hoverProps } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.4 })
   const [pressed, setPressed] = useState(false)
-  const pillsRef = useRef<HTMLDivElement>(null)
   const { courses, live } = useDemoCourses(6)
+  // Snappier: quick typing, a short "analysing" beat, then the answer stays long
+  // enough for the charts to finish drawing.
   const demo = useDemoSequence(prompts, {
     paused,
-    typeMs: 58,
-    jitterMs: [46, 88],
-    workingMs: 850,
-    showMs: 4600,
+    typeMs: 40,
+    jitterMs: [26, 58],
+    workingMs: 380,
+    clearMs: 220,
+    showMs: 5600,
   })
   const current = heroDemoSteps[demo.step] ?? heroDemoSteps[0]
 
@@ -364,19 +363,56 @@ export function HeroDemo() {
   const isTyping = demo.phase === 'typing'
   const isWorking = demo.phase === 'working'
 
-  return (
-    <div className="demo" ref={ref} {...hoverProps} aria-label="عرض تفاعلي لمنصة ماستري">
-      <div className="demo__top">
-        <span className="demo__brand">
-          <LayoutDashboard size={14} aria-hidden="true" />
-          ماستري — لوحة التدريب
-        </span>
-        <Tag tone="soft" icon={<Info aria-hidden="true" />}>مثال توضيحي</Tag>
-      </div>
+  // Phones: keep the active step scrolled into view inside the rail.
+  const railRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const rail = railRef.current
+    const item = rail?.children[demo.step] as HTMLElement | undefined
+    if (!rail || !item || rail.scrollWidth <= rail.clientWidth) return
+    const target = item.offsetLeft - (rail.clientWidth - item.offsetWidth) / 2
+    rail.scrollTo({ left: target, behavior: 'smooth' })
+  }, [demo.step])
 
+  return (
+    <div className="demo demo--v2" ref={ref} {...hoverProps} aria-label="عرض تفاعلي لمنصة ماستري">
       <div className="demo__body">
+        {/* The five capabilities as one segmented rail; a gradient glider slides to the active one. */}
+        <div className="demo-rail-wrap">
+          <div className="demo-rail" role="tablist" aria-label="أبعاد العرض" ref={railRef}>
+            {heroDemoSteps.map((item, index) => {
+              const Icon = stepIcons[item.kind]
+              const active = index === demo.step
+              return (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  className={active ? 'demo-rail__item is-active' : 'demo-rail__item'}
+                  key={item.pill}
+                  onClick={() => jumpTo(index)}
+                >
+                  {active ? (
+                    <motion.span
+                      layoutId="demo-rail-glider"
+                      className="demo-rail__glider"
+                      transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+                      aria-hidden="true"
+                    >
+                      <span className="demo-rail__timer" key={demo.resultKey} />
+                    </motion.span>
+                  ) : null}
+                  <span className="demo-rail__icon">
+                    <Icon aria-hidden="true" />
+                  </span>
+                  <span className="demo-rail__label">{item.pill}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
         <div className="demo__input">
-          <Sparkles className="demo__input-icon" size={14} aria-hidden="true" />
+          <Sparkles className="demo__input-icon" size={16} aria-hidden="true" />
           <span className="demo__prompt">
             {demo.text ? (
               <TypewriterChars text={demo.text} ghosts={demo.ghosts} caret={isTyping} phase={demo.typePhase} />
@@ -394,30 +430,7 @@ export function HeroDemo() {
           </button>
         </div>
 
-        <ScrollArrows scrollerRef={pillsRef} className="demo__pills-wrap" label="أبعاد العرض">
-        <ToggleGroup
-          ref={pillsRef}
-          type="single"
-          className="demo__pills"
-          aria-label="أبعاد العرض"
-          value={String(demo.step)}
-          onValueChange={(value) => {
-            if (value) jumpTo(Number(value))
-          }}
-        >
-          {heroDemoSteps.map((item, index) => {
-            const Icon = stepIcons[item.kind]
-            return (
-              <ToggleGroupItem className="demo__pill" value={String(index)} key={item.pill} showCheck={false}>
-                <Icon size={13} aria-hidden="true" />
-                {item.pill}
-              </ToggleGroupItem>
-            )
-          })}
-        </ToggleGroup>
-        </ScrollArrows>
-
-        <div className="demo__result">
+        <div className="demo__result demo__result--v2">
           <div className="demo__status" aria-live="polite">
             {isWorking ? (
               <>
@@ -427,20 +440,24 @@ export function HeroDemo() {
             ) : demo.resultVisible ? (
               <>
                 <span className="demo__tag" aria-hidden="true">
-                  <Check size={10} /> تم
+                  <AnimateIcon loop={ICON_LOOP} animateOnHover={false}>
+                    <AnimatedCheck size={11} />
+                  </AnimateIcon>{' '}
+                  تم
                 </span>
-                النتيجة جاهزة — {current.pill}
+                النتيجة جاهزة: {current.pill}
               </>
             ) : (
               <>
-                <Keyboard size={12} aria-hidden="true" />
+                <Keyboard size={13} aria-hidden="true" />
                 يكتب الطلب…
               </>
             )}
+            <Tag tone="soft" icon={<Info aria-hidden="true" />}>مثال توضيحي</Tag>
           </div>
 
           {demo.resultVisible ? (
-            <div key={demo.resultKey}>
+            <div className="demo__answer" key={demo.resultKey}>
               <Result kind={current.kind} courses={courses} />
             </div>
           ) : (
@@ -453,9 +470,9 @@ export function HeroDemo() {
         </div>
 
         <p className="demo__hint">
-          <MousePointerClick size={11} aria-hidden="true" />
-          {live ? 'دورات حقيقية من مكتبة ماستري — ' : ''}
-          تفاعلي — اضغط أي بُعد لتجربته. يتوقف تلقائياً عند خروجه من الشاشة.
+          <MousePointerClick size={12} aria-hidden="true" />
+          {live ? 'دورات حقيقية من مكتبة ماستري. ' : ''}
+          اضغط أي خطوة لتجربتها. يتوقف العرض تلقائياً عند خروجه من الشاشة.
         </p>
       </div>
     </div>

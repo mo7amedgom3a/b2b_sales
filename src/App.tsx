@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
 import { Nav } from './sections/Nav'
-import { Hero } from './sections/Hero'
+import { Hero } from './sections/hero/Hero'
 import { Footer } from './sections/Footer'
 import { Sprite } from './ui/Sprite'
 import { WhatsAppFab } from './ui/WhatsAppFab'

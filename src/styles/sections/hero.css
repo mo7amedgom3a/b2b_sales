@@ -1,0 +1,106 @@
+/* ---------- Hero: centered eyebrow → title → rotating claim → CTA ---------- */
+.hero {
+  background: var(--surface-alt);
+  overflow: clip;
+}
+.hero__inner {
+  display: grid;
+  place-items: center;
+  padding-block: clamp(48px, 9vh, 104px) clamp(28px, 5vh, 56px);
+}
+.hero__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 980px;
+  min-width: 0;
+}
+.hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text);
+  font-size: clamp(13px, 1.1vw, 15px);
+  line-height: 1.5;
+  font-weight: 600;
+}
+.hero__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .12em;
+  margin-block-start: clamp(18px, 2.4vw, 28px);
+  font-family: var(--font-arabic);
+  font-size: clamp(38px, 6.4vw, 88px);
+  line-height: 1.16;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-wrap: balance;
+}
+.hero__title-main { max-width: 14em; }
+
+/* Rotating claim: all phrases share one grid cell (the sizers are invisible),
+   so the line has the size of the longest phrase and nothing below it moves. */
+.hero-rotator {
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
+  max-width: 100%;
+  font-size: .82em;
+  color: var(--ink);
+}
+.hero-rotator > * { grid-area: 1 / 1; max-width: 100%; padding: 0 .28em .06em; }
+.hero-rotator__sizer { visibility: hidden; white-space: nowrap; }
+/* The marker hugs the typed text; min-height keeps the line from collapsing
+   between phrases, so only a slim caret-sized marker shows when empty. */
+.hero-rotator__live {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.16em;
+  white-space: nowrap;
+  border-radius: .18em;
+  background: var(--coral);
+}
+.hero-rotator .tw-caret { width: .06em; min-width: 2px; height: .9em; vertical-align: -.08em; background: var(--ink); }
+
+.hero__ctas {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-block-start: clamp(24px, 3vw, 36px);
+}
+.hero__note {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-block-start: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 20px;
+}
+.hero__note svg { width: 14px; height: 14px; flex: none; }
+
+/* Entrance: one orchestrated rise (transform only, the h1 stays paintable for LCP). */
+.hero__copy > * { animation: ma-hero-rise .8s var(--ease-out) both; }
+.hero__copy > :nth-child(2) { animation-delay: .06s; }
+.hero__copy > :nth-child(3) { animation-delay: .14s; }
+.hero__copy > :nth-child(4) { animation-delay: .2s; }
+@keyframes ma-hero-rise { from { transform: translateY(18px); } to { transform: none; } }
+
+@media (max-width: 599px) {
+  .hero__inner { padding-block: 40px 24px; }
+  .hero__title { font-size: clamp(32px, 9.6vw, 44px); }
+  .hero__ctas { width: 100%; }
+  /* Never clip a long claim on a narrow phone: let it wrap, balanced. */
+  .hero-rotator__sizer, .hero-rotator__live { white-space: normal; text-wrap: balance; }
+  .hero__ctas .ma-btn { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero__copy > * { animation: none; }
+}

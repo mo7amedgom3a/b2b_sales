@@ -41,16 +41,21 @@ import { Todo } from '../ui/Todo'
 
 type Selection = Record<string, number>
 
-const initialSelection: Selection = { competency: 0, gap: 2, sector: 1, level: 0 }
+const initialSelection: Selection = { competency: 0, gap: 2, sector: 1, level: 0, env: 0 }
 
 const dimensionIcons: Record<string, LucideIcon> = {
+  core: Target,
   competency: Target,
   gap: TriangleAlert,
   sector: Building2,
   level: UserCog,
+  env: MapPin,
 }
 
+/** One icon per sales environment (same order as the `env` options). */
 const envIcons: LucideIcon[] = [MapPin, Store, Phone, Globe, Headset]
+
+const dimByKey = (key: string) => paths.dimensions.find((item) => item.key === key)
 
 function initialOf(name: string | null) {
   const cleaned = (name ?? '').replace(/^(د|أ|م|م\.|د\.|أ\.)\.?\s*/u, '').trim()
@@ -134,17 +139,10 @@ function TrainerStack({ courses }: { courses: PathCourse[] }) {
 export function Paths() {
   const reduce = useReducedMotion()
   const { ref, paused, hoverProps } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.25 })
-  const [narrow, setNarrow] = useState(false)
-  /** Phones: which option group is expanded (the rest show only their current pick). */
-  const [openDim, setOpenDim] = useState<string | null>(null)
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 899px)')
-    const update = () => setNarrow(query.matches)
-    update()
-    query.addEventListener('change', update)
-    return () => query.removeEventListener('change', update)
-  }, [])
+  /** Expanded option groups: «الفجوات والجدارات» starts open, the rest show only their pick. */
+  const [openGroups, setOpenGroups] = useState<string[]>(['core'])
+  const toggleGroup = (key: string) =>
+    setOpenGroups((current) => (current.includes(key) ? current.filter((item) => item !== key) : [...current, key]))
   const [selection, setSelection] = useState<Selection>(initialSelection)
 
   useEffect(() => {
@@ -159,7 +157,7 @@ export function Paths() {
   }, [reduce, paused, selection])
 
   const optionOf = (key: string) => {
-    const dim = paths.dimensions.find((item) => item.key === key)
+    const dim = dimByKey(key)
     if (!dim) return ''
     return dim.options[selection[key] ?? 0] ?? dim.options[0] ?? ''
   }
@@ -173,7 +171,7 @@ export function Paths() {
   const { courses, status } = usePathCourses(competencyTerm, optionOf('gap'), trackKey)
   const track = useB2BTrack(trackKey)
 
-  const composed = `مسار ${optionOf('level')} في ${optionOf('sector')} — يعالج فجوة «${optionOf('gap')}» ويبني جدارة «${optionOf('competency')}».`
+  const composed = `مسار ${optionOf('level')} (${optionOf('env')}) في ${optionOf('sector')} — يعالج فجوة «${optionOf('gap')}» ويبني جدارة «${optionOf('competency')}».`
   const { text: typedPath, phase } = useTypewriter([composed], {
     loop: false,
     restartKey: composed,
@@ -205,52 +203,66 @@ export function Paths() {
 
         <div className="paths__grid">
           <div className="dim">
-            {paths.dimensions.map((dim) => {
-              const Icon = dimensionIcons[dim.key] ?? Target
-              const isOpen = !narrow || openDim === dim.key
-              const panelId = `dim-${dim.key}`
+            {paths.groups.map((group) => {
+              const Icon = dimensionIcons[group.key] ?? Target
+              const isOpen = openGroups.includes(group.key)
+              const panelId = `dim-${group.key}`
+              const dims = group.dims.map(dimByKey).filter((dim) => dim !== undefined)
+              const summary = group.dims.map(optionOf).join(' · ')
               return (
-                <div className={isOpen ? 'dim__row is-open' : 'dim__row'} key={dim.key}>
-                  <div className="dim__label">
-                    <Icon className="dim__icon" aria-hidden="true" />
-                    {dim.label}
-                    {'hint' in dim && dim.hint ? <span className="dim__hint">{dim.hint}</span> : null}
-                  </div>
-                  {/* Phones: one compact row per group with its current pick; tap to change. */}
+                <div className={isOpen ? 'dim__row is-open' : 'dim__row'} key={group.key}>
                   <button
                     type="button"
                     className="dim__toggle"
                     aria-expanded={isOpen}
                     aria-controls={panelId}
-                    onClick={() => setOpenDim((current) => (current === dim.key ? null : dim.key))}
+                    onClick={() => toggleGroup(group.key)}
                   >
                     <Icon className="dim__icon" aria-hidden="true" />
-                    <span className="dim__toggle-label">{dim.label}</span>
-                    <span className="dim__toggle-value" key={optionOf(dim.key)}>
-                      {optionOf(dim.key)}
+                    <span className="dim__toggle-label">{group.label}</span>
+                    <span className="dim__toggle-value" key={summary}>
+                      {summary}
                     </span>
                     <ChevronDown className="dim__chevron" aria-hidden="true" />
                   </button>
                   <div className="dim__panel" id={panelId} hidden={!isOpen}>
-                    <ToggleGroup
-                      type="single"
-                      className="chips"
-                      aria-label={dim.label}
-                      value={String(selection[dim.key] ?? 0)}
-                      onValueChange={(value) => {
-                        if (!value) return
-                        // The pick shows at once; the random walk carries on from it.
-                        setSelection((current) => ({ ...current, [dim.key]: Number(value) }))
-                        // Phones: close the group so the path card right below is in view.
-                        if (narrow) setOpenDim(null)
-                      }}
-                    >
-                      {dim.options.map((option, index) => (
-                        <ToggleGroupItem className="chip" value={String(index)} key={option}>
-                          {option}
-                        </ToggleGroupItem>
-                      ))}
-                    </ToggleGroup>
+                    {dims.map((dim) => (
+                      <div className="dim__part" key={dim.key}>
+                        {dims.length > 1 ? (
+                          <span className="dim__part-label">
+                            {(() => {
+                              const PartIcon = dimensionIcons[dim.key] ?? Target
+                              return <PartIcon aria-hidden="true" />
+                            })()}
+                            {dim.label}
+                            {'hint' in dim && dim.hint ? <span className="dim__hint">{dim.hint}</span> : null}
+                          </span>
+                        ) : null}
+                        <ToggleGroup
+                          type="single"
+                          className="chips"
+                          aria-label={dim.label}
+                          value={String(selection[dim.key] ?? 0)}
+                          onValueChange={(value) => {
+                            if (!value) return
+                            // The pick shows at once; the random walk carries on from it.
+                            setSelection((current) => ({ ...current, [dim.key]: Number(value) }))
+                            // Single-choice groups close so the path card is back in view.
+                            if (dims.length === 1) setOpenGroups((current) => current.filter((item) => item !== group.key))
+                          }}
+                        >
+                          {dim.options.map((option, index) => {
+                            const ChipIcon = dim.key === 'env' ? envIcons[index] : undefined
+                            return (
+                              <ToggleGroupItem className="chip" value={String(index)} key={option}>
+                                {ChipIcon ? <ChipIcon className="chip__icon" aria-hidden="true" /> : null}
+                                {option}
+                              </ToggleGroupItem>
+                            )
+                          })}
+                        </ToggleGroup>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )
@@ -259,6 +271,7 @@ export function Paths() {
 
           <div ref={ref} {...hoverProps}>
             <Reveal delay={0.08}>
+              <div className="focus-glow">
               <div className="builder">
                 <div className="builder__top">
                   <span className="builder__title">
@@ -284,6 +297,7 @@ export function Paths() {
                     <Tag tone="sky" icon={<Building2 aria-hidden="true" />}>{optionOf('sector')}</Tag>
                     <Tag tone="coral" icon={<TriangleAlert aria-hidden="true" />}>{optionOf('gap')}</Tag>
                     <Tag tone="soft" icon={<Target aria-hidden="true" />}>{optionOf('competency')}</Tag>
+                    <Tag tone="soft" icon={<MapPin aria-hidden="true" />}>{optionOf('env')}</Tag>
                   </div>
                   <div className="builder__bar">
                     <div className="track">
@@ -337,29 +351,13 @@ export function Paths() {
                       {paths.builder.note}
                     </span>
                     <span className="builder__count">
-                      <Layers aria-hidden="true" /> 4 أبعاد
+                      <Layers aria-hidden="true" /> {paths.groups.length} أبعاد
                     </span>
                   </div>
                 </div>
               </div>
+              </div>
             </Reveal>
-          </div>
-        </div>
-
-        <div className="paths__envs">
-          <h3>
-            <MapPin aria-hidden="true" /> بيئات البيع التي نغطيها
-          </h3>
-          <div className="chips">
-            {paths.envs.map((env, index) => {
-              const Icon = envIcons[index] ?? MapPin
-              return (
-                <span className="env-chip" key={env}>
-                  <Icon aria-hidden="true" />
-                  {env}
-                </span>
-              )
-            })}
           </div>
         </div>
 

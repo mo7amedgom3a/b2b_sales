@@ -1,7 +1,9 @@
 import { useRef } from 'react'
 import { useScrollFx } from './motion/useScrollFx'
-import { Logos } from './sections/Logos'
-import { Problem } from './sections/Problem'
+import { Demo } from './sections/demo/Demo'
+import { Proof } from './sections/proof/Proof'
+import { Gaps } from './sections/gaps/Gaps'
+import { Offer } from './sections/offer/Offer'
 import { HowWeWork } from './sections/HowWeWork'
 import { Paths } from './sections/Paths'
 import { AI } from './sections/AI'
@@ -19,8 +21,10 @@ export default function Below() {
 
   return (
     <div className="below" ref={rootRef}>
-      <Logos />
-      <Problem />
+      <Demo />
+      <Proof />
+      <Gaps />
+      <Offer />
       <HowWeWork />
       <Paths />
       <AI />

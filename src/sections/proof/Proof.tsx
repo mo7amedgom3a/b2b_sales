@@ -1,8 +1,8 @@
-import { BadgeCheck, BookOpen, Building2, GraduationCap, UsersRound } from 'lucide-react'
-import { clientLogos, stats } from '../content/ar'
-import { CountUp } from '../motion/CountUp'
-import { Marquee } from '../motion/Marquee'
-import { Reveal } from '../motion/Reveal'
+import { BookOpen, Building2, GraduationCap, UsersRound } from 'lucide-react'
+import { clientLogos, stats } from '../../content/ar'
+import { CountUp } from '../../motion/CountUp'
+import { Marquee } from '../../motion/Marquee'
+import { Accreditations } from './Accreditations'
 
 const statIcons = [
   { Icon: BookOpen, tone: 'coral' },
@@ -11,47 +11,56 @@ const statIcons = [
   { Icon: GraduationCap, tone: 'sky' },
 ] as const
 
-export function Logos() {
+/** Off-white, transparent copies of the client logos (public/assets/logos/mono). */
+const monoLogo = (src: string) => src.replace('/assets/logos/', '/assets/logos/mono/')
+
+/**
+ * The proof band: client logos (one off-white tone), the
+ * Mastery numbers, then the accrediting bodies. Dark in both themes.
+ */
+export function Proof() {
   return (
-    <section className="section section--tight logos" id="clients">
+    <section className="proof" id="clients" aria-labelledby="proof-title">
       <div className="ma-container">
-        <Reveal>
-          <p className="logos__label">
-            <BadgeCheck aria-hidden="true" />
-            شركات تثق بماستري لتدريب فرق مبيعاتها
-          </p>
-          <p className="logos__sub">التجارة والتجزئة · العقار · التأمين · التمويل · الصحة</p>
-        </Reveal>
+        <h2 className="proof__label" id="proof-title">
+          شركات تثق بماستري لتدريب فرق مبيعاتها
+        </h2>
+        <p className="proof__sub">التجارة والتجزئة · العقار · التأمين · التمويل · الصحة</p>
+      </div>
 
-        <div className="logos__belt">
-          <Marquee label="شعارات عملاء ماستري">
-            {clientLogos.map((logo) => (
-              <span className="logo-tile" key={logo.name} title={logo.name}>
-                <img src={logo.src} alt={logo.name} loading="lazy" decoding="async" />
-              </span>
-            ))}
-          </Marquee>
-        </div>
+      <div className="proof__belt">
+        <Marquee label="شعارات عملاء ماستري">
+          {clientLogos.map((logo) => (
+            <span className="proof-logo" key={logo.name} title={logo.name}>
+              <img src={monoLogo(logo.src)} alt={logo.name} loading="lazy" decoding="async" />
+            </span>
+          ))}
+        </Marquee>
+      </div>
 
-        <div className="stats">
+      <div className="ma-container">
+        <div className="proof__stats">
           {stats.map((stat, index) => {
             const { Icon, tone } = statIcons[index] ?? statIcons[0]
+            const prefix = 'prefix' in stat ? stat.prefix : undefined
             return (
-              <div className="stat" key={stat.label}>
+              <div className="proof-stat" key={stat.label}>
                 <CountUp
-                  className="stat__value"
+                  className="proof-stat__value"
                   value={stat.value}
-                  prefix={'prefix' in stat ? stat.prefix : undefined}
-                  label={`${'prefix' in stat ? stat.prefix : ''}${stat.value} ${stat.label}`}
+                  prefix={prefix}
+                  label={`${prefix ?? ''}${stat.value} ${stat.label}`}
                 />
-                <div className="stat__label">
-                  <Icon className={`stat-icon--${tone}`} aria-hidden="true" />
+                <div className="proof-stat__label">
+                  <Icon className={`proof-stat__icon proof-stat__icon--${tone}`} aria-hidden="true" />
                   {stat.label}
                 </div>
               </div>
             )
           })}
         </div>
+
+        <Accreditations />
       </div>
     </section>
   )

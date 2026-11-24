@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import type { ReactNode, SVGProps } from 'react'
 import { motion, type Variants } from 'motion/react'
 import { cn } from '../lib/cx'
@@ -20,14 +20,38 @@ export function AnimateIcon({
   className,
   animateOnHover = true,
   animateOnTap = true,
+  loop,
+  loopDelay = 0,
 }: {
   children: ReactNode
   className?: string
   animateOnHover?: boolean
   animateOnTap?: boolean
+  /** Replay the icon's animation every `loop` ms (like the charts), unless reduced motion is on. */
+  loop?: number
+  /** Offset before the first replay, so a row of icons doesn't pulse in lockstep. */
+  loopDelay?: number
 }) {
   const [animate, setAnimate] = useState(false)
   const timer = useRef<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (!loop) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let interval: number | undefined
+    const pulse = () => {
+      setAnimate(false)
+      window.requestAnimationFrame(() => setAnimate(true))
+    }
+    const start = window.setTimeout(() => {
+      pulse()
+      interval = window.setInterval(pulse, loop)
+    }, loopDelay)
+    return () => {
+      window.clearTimeout(start)
+      window.clearInterval(interval)
+    }
+  }, [loop, loopDelay])
 
   const replay = () => {
     window.clearTimeout(timer.current)

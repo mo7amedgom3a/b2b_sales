@@ -106,16 +106,8 @@ export function SuccessStory() {
               <p className="story-quote" style={{ marginBlockStart: 14 }}>
                 {story.quote}
               </p>
-              <p className="story-quote__by">{story.quoteBy}</p>
-              <span className="story-quote__placeholder">
-                <Todo>الاقتباس واسم المتحدث من فيديو الأصول العقارية</Todo>
-              </span>
-              <div style={{ marginBlockStart: 18 }}>
-                <Button variant="soft" onClick={play} disabled={playing}>
-                  شاهد فيديو القصة
-                  <Play size={16} aria-hidden="true" />
-                </Button>
-              </div>
+             
+              
             </div>
           </Reveal>
         </div>

@@ -1,4 +1,3 @@
-import { Clock3 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { video } from '../../content/ar'
 import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
@@ -161,7 +160,6 @@ export function HeroVideo() {
               {video.kicker}
             </span>
             <h2 className="hero-video__title">{video.title}</h2>
-            <p className="hero-video__line">{video.line}</p>
             <div className="hero-video__speakers">
               <span className="hero-video__speaker-avatars" aria-hidden="true">
                 {speakers.map((person) => (
@@ -179,12 +177,7 @@ export function HeroVideo() {
                 مع <b>{video.speakers[0]}</b> و<b>{video.speakers[1]}</b>
               </span>
             </div>
-            <div className="hero-video__meta">
-              <Clock3 aria-hidden="true" />
-              <span>ثلاث دقائق</span>
-              <span aria-hidden="true">·</span>
-              <span>بدون تسجيل</span>
-            </div>
+            
           </div>
 
           <div className="hero-video__frame">

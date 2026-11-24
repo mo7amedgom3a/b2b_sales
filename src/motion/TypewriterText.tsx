@@ -5,7 +5,15 @@ import type { TypewriterPhase } from './useTypewriter'
 
 type Ghost = { char: string; key: number }
 
-/** The visible characters: typed ones rise in, erased ones fade up out of the line. */
+/** Zero-width joiner: keeps an erased Arabic letter in its connected shape while it fades out. */
+const ZWJ = '\u200D'
+
+/**
+ * The visible text. It is ONE text node, so the browser shapes Arabic as a
+ * connected word in every engine (per-letter spans can break cursive joining).
+ * Smoothness comes from a soft fade on the writing edge while typing
+ * (`.tw-text.is-writing`), and erased letters fade up out of the line.
+ */
 export function TypewriterChars({
   text,
   ghosts = [],
@@ -21,17 +29,14 @@ export function TypewriterChars({
   className?: string
   style?: CSSProperties
 }) {
-  const chars = Array.from(text)
+  // Newest ghost = the letter removed last = logically first after the text.
+  const orderedGhosts = [...ghosts].reverse()
   return (
     <span className={cn('tw', className)} style={style} aria-hidden="true">
-      {chars.map((char, index) => (
-        <span className="tw-char" key={index}>
-          {char}
-        </span>
-      ))}
-      {ghosts.map((ghost) => (
+      {text ? <span className={cn('tw-text', phase === 'typing' && 'is-writing')}>{text}</span> : null}
+      {orderedGhosts.map((ghost) => (
         <span className="tw-char tw-char--out" key={`g${ghost.key}`}>
-          {ghost.char}
+          {/\s/.test(ghost.char) ? ghost.char : `${ZWJ}${ghost.char}`}
         </span>
       ))}
       {caret && phase !== 'done' ? (
@@ -62,8 +67,8 @@ type TypewriterTextProps = {
 }
 
 /**
- * Smooth typewriter: characters rise + de-blur in as they are typed, and the
- * erased tail fades up out of the line instead of snapping away.
+ * Smooth typewriter: the writing edge fades in softly as characters are typed,
+ * and the erased tail fades up out of the line instead of snapping away.
  */
 export function TypewriterText({
   texts,

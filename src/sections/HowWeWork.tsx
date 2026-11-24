@@ -16,6 +16,8 @@ import {
   Workflow,
   X,
 } from 'lucide-react'
+import { useState } from 'react'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { how } from '../content/ar'
 import { useCardStack } from '../motion/useCardStack'
 import { Reveal } from '../motion/Reveal'
@@ -25,7 +27,10 @@ import { HowOrbit } from './how/HowOrbit'
 const deliveryIcons = { clock: Clock, live: Radio, spark: Sparkles } as const
 const compareIcons = [Clock, SlidersHorizontal, Hammer, Users, RotateCcw, Gauge, HeartHandshake, Wallet] as const
 
+type Side = 'mastery' | 'old'
+
 export function HowWeWork() {
+  const [side, setSide] = useState<Side>('mastery')
   const deliveryRef = useCardStack<HTMLDivElement>({ breakpoint: 767 })
 
   return (
@@ -113,34 +118,47 @@ export function HowWeWork() {
             </tbody>
           </table>
 
-          <div className="compare__mobile" role="list" aria-label="مقارنة التدريب التقليدي مع ماستري">
+          {/* Phones: pick a side, then read one compact list (no side-by-side squeeze). */}
+          <div className="compare__mobile">
+            <ToggleGroup
+              type="single"
+              value={side}
+              onValueChange={(value) => value && setSide(value as Side)}
+              className="compare-switch"
+              aria-label="اختر نوع التدريب للمقارنة"
+            >
+              <ToggleGroupItem value="mastery" showCheck={false} className="compare-switch__item">
+                <Check aria-hidden="true" /> مع ماستري
+              </ToggleGroupItem>
+              <ToggleGroupItem value="old" showCheck={false} className="compare-switch__item">
+                <X aria-hidden="true" /> التدريب التقليدي
+              </ToggleGroupItem>
+            </ToggleGroup>
+
+            <div className={side === 'mastery' ? 'focus-glow' : undefined}>
+            <ul
+              className={`compare-list compare-list--${side}`}
+              key={side}
+              aria-label={side === 'mastery' ? 'التدريب مع ماستري' : 'التدريب التقليدي'}
+            >
               {how.compare.map(([label, traditional, mastery], index) => {
                 const Icon = compareIcons[index] ?? Clock
+                const Mark = side === 'mastery' ? Check : X
                 return (
-                  <div role="listitem" key={label}>
-                    <div className="compare-card">
-                      <h4>
-                        <span className="compare-card__dim">
-                          <Icon aria-hidden="true" />
-                          {label}
-                        </span>
-                      </h4>
-                      <div className="compare-card__row">
-                        <span>
-                          <X aria-hidden="true" /> التقليدي
-                        </span>
-                        <p>{traditional}</p>
-                      </div>
-                      <div className="compare-card__row">
-                        <span>
-                          <Check aria-hidden="true" /> مع ماستري
-                        </span>
-                        <p>{mastery}</p>
-                      </div>
-                    </div>
-                  </div>
+                  <li className="compare-list__row" key={label} style={{ animationDelay: `${index * 35}ms` }}>
+                    <span className="compare-list__dim">
+                      <Icon aria-hidden="true" />
+                      {label}
+                    </span>
+                    <span className="compare-list__value">
+                      <Mark className="compare-list__mark" aria-hidden="true" />
+                      {side === 'mastery' ? mastery : traditional}
+                    </span>
+                  </li>
                 )
               })}
+            </ul>
+            </div>
           </div>
         </div>
       </div>
