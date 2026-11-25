@@ -143,7 +143,7 @@ export function Hero() {
           </div>
 
           <div className="ma-container hero__speakers">
-            <HeroVideoSpeakers activate={activate} />
+            <HeroVideoSpeakers />
           </div>
         </div>
       </div>

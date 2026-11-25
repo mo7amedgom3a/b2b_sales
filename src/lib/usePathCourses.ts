@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { fallbackProducts } from '../content/products'
-import { fetchB2BCourses, fetchB2BTracks, fetchCardsBySlugs, fetchSalesProductCards, searchCourses } from './api'
-import type { ApiB2BProgram, ApiB2BTrack, ApiProductCard, ApiSearchHit } from './api'
+import { b2bSnapshot } from '../content/b2bSnapshot'
+import { fetchB2BCourses, fetchB2BTracks } from './api'
+import type { ApiB2BProgram, ApiB2BTrack } from './api'
 import { formatDuration } from './format'
 
 export type PathCourse = {
@@ -17,33 +17,6 @@ export type PathCourse = {
 export type PathCoursesStatus = 'loading' | 'live' | 'fallback'
 
 const COUNT = 4
-
-function fromCard(card: ApiProductCard): PathCourse | null {
-  const title = card.title?.trim()
-  if (!title) return null
-  return {
-    slug: card.slug,
-    title,
-    image: card.image,
-    instructor: card.instructor_name?.trim() || null,
-    avatar: card.instructor_avatar,
-    lessons: card.lesson_count || null,
-    duration: formatDuration(card.duration_seconds),
-  }
-}
-
-function fromHit(hit: ApiSearchHit, card: ApiProductCard | undefined): PathCourse {
-  const enriched = card ? fromCard(card) : null
-  return {
-    slug: hit.slug,
-    title: hit.title.replace(/⁠/g, '').trim(),
-    image: enriched?.image ?? hit.image,
-    instructor: enriched?.instructor ?? hit.instructors[0] ?? null,
-    avatar: enriched?.avatar ?? null,
-    lessons: enriched?.lessons ?? null,
-    duration: enriched?.duration ?? (hit.duration_minutes ? formatDuration(hit.duration_minutes * 60) : null),
-  }
-}
 
 function fromProgram(program: ApiB2BProgram): PathCourse {
   const trainer = program.trainers[0]
@@ -68,7 +41,7 @@ function spread(value: string) {
 /**
  * B2B library first: keyword matches for the competency and the gap (across the
  * whole library), topped up with programs from the track's combined categories.
- * Throws when the B2B endpoints are unavailable so the catalog chain takes over.
+ * Throws when the B2B endpoints are unavailable (the caller then uses the B2B snapshot).
  */
 async function loadB2BCourses(competency: string, gap: string, track: string | undefined): Promise<PathCourse[]> {
   const results = await Promise.allSettled([
@@ -101,39 +74,11 @@ async function loadB2BCourses(competency: string, gap: string, track: string | u
   return picked.map(fromProgram)
 }
 
-/** Interleave two relevance lists (a, b, a, b…) without duplicates. */
-function interleave(a: ApiSearchHit[], b: ApiSearchHit[]) {
-  const seen = new Set<string>()
-  const out: ApiSearchHit[] = []
-  for (let i = 0; i < Math.max(a.length, b.length); i += 1) {
-    for (const hit of [a[i], b[i]]) {
-      if (hit && !seen.has(hit.slug)) {
-        seen.add(hit.slug)
-        out.push(hit)
-      }
-    }
-  }
-  return out
-}
-
-async function loadPathCourses(competency: string, gap: string): Promise<PathCourse[]> {
-  const [byCompetency, byGap] = await Promise.all([
-    searchCourses(competency, COUNT).catch(() => null),
-    competency === gap ? Promise.resolve(null) : searchCourses(gap, COUNT).catch(() => null),
-  ])
-  const hits = interleave(byCompetency?.items ?? [], byGap?.items ?? []).slice(0, COUNT)
-  if (hits.length === 0) throw new Error('no hits')
-
-  const cards = await fetchCardsBySlugs(hits.map((hit) => hit.slug)).catch(() => null)
-  const bySlug = new Map((cards?.items ?? []).map((card) => [card.slug, card]))
-  return hits.map((hit) => fromHit(hit, bySlug.get(hit.slug)))
-}
-
 /**
- * Real Mastery courses for the path builder. Primary source is the public B2B
- * library (`/b2b/courses`: keyword + track of combined categories, with trainer
- * avatars). If that API is unavailable it searches the B2C catalog for the chosen
- * competency and gap, then the newest sales courses, then the bundled snapshot.
+ * Real Mastery courses for the path builder, from the B2B library only
+ * (`/b2b/courses`: keyword matches across the library, topped up from the
+ * track's combined categories, with trainer avatars). If that API is
+ * unreachable it shows the bundled B2B snapshot.
  */
 export function usePathCourses(competency: string, gap: string, track?: string) {
   const [courses, setCourses] = useState<PathCourse[]>([])
@@ -144,21 +89,17 @@ export function usePathCourses(competency: string, gap: string, track?: string) 
     setStatus('loading')
     const timer = window.setTimeout(() => {
       loadB2BCourses(competency, gap, track)
-        .catch(() => loadPathCourses(competency, gap))
         .then((items) => {
           if (cancelled) return
           setCourses(items)
           setStatus('live')
         })
-        .catch(async () => {
-          const page = await fetchSalesProductCards(COUNT).catch(() => null)
+        .catch(() => {
           if (cancelled) return
-          const items = (page?.items.length ? page.items : fallbackProducts)
-            .map(fromCard)
-            .filter((item): item is PathCourse => item !== null)
-            .slice(0, COUNT)
-          setCourses(items)
-          setStatus(page?.items.length ? 'live' : 'fallback')
+          const offset = spread(competency + gap) % b2bSnapshot.length
+          const rotated = [...b2bSnapshot.slice(offset), ...b2bSnapshot.slice(0, offset)]
+          setCourses(rotated.slice(0, COUNT).map(fromProgram))
+          setStatus('fallback')
         })
     }, 450)
     return () => {

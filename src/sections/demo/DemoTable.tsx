@@ -477,7 +477,7 @@ export function DemoTable() {
 
         <p className="demo__hint">
           <MousePointerClick size={12} aria-hidden="true" />
-          {live ? 'دورات حقيقية من مكتبة ماستري · ' : ''}
+          {live ? 'برامج حقيقية من مكتبة ماستري للأعمال · ' : ''}
           مثال توضيحي · اضغط أي خطوة لتجربتها
         </p>
       </div>

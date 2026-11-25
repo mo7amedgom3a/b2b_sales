@@ -37,20 +37,6 @@ async function getJson<T>(path: string): Promise<T> {
   return request
 }
 
-export type ApiExpert = {
-  key: string
-  name: string
-  avatar: string | null
-  specialized: string | null
-  headline: string | null
-  course_count: number
-  diploma_count: number
-  package_count: number
-  consultation_count: number
-  is_consultant: boolean
-  categories: string[]
-}
-
 export type ApiPrice = {
   amount: number
   compare_at_amount: number | null
@@ -79,10 +65,6 @@ export type ApiProductCardPage = {
   total: number
 }
 
-export function fetchExperts(): Promise<ApiExpert[]> {
-  return getJson<ApiExpert[]>('/api/v1/catalog/experts?limit=500')
-}
-
 /** «المبيعات وخدمة العملاء» in `/api/v1/catalog/categories`. */
 export const SALES_CATEGORY_ID = 'b64459a2-88f9-88e4-13db-53a41f6d132b'
 
@@ -94,35 +76,6 @@ export function fetchSalesProductCards(limit = 12): Promise<ApiProductCardPage> 
     limit: String(limit),
     sort: 'newest',
   })
-  return getJson<ApiProductCardPage>(`/api/v1/catalog/cards?${params}`)
-}
-
-export type ApiSearchHit = {
-  id: string
-  slug: string
-  title: string
-  image: string | null
-  duration_minutes: number | null
-  instructors: string[]
-  categories: string[]
-  product_type: string | null
-}
-
-export type ApiSearchPage = {
-  items: ApiSearchHit[]
-  total: number
-}
-
-/** Full-text course search (relevance order). Instructors come back as names only. */
-export function searchCourses(q: string, limit = 4): Promise<ApiSearchPage> {
-  const params = new URLSearchParams({ q, product_type: 'course', limit: String(limit) })
-  return getJson<ApiSearchPage>(`/api/v1/search?${params}`)
-}
-
-/** Catalog cards for specific slugs — adds course art, instructor avatar and lesson count. */
-export function fetchCardsBySlugs(slugs: readonly string[]): Promise<ApiProductCardPage> {
-  const params = new URLSearchParams({ limit: String(Math.max(1, slugs.length)) })
-  slugs.forEach((slug) => params.append('slug', slug))
   return getJson<ApiProductCardPage>(`/api/v1/catalog/cards?${params}`)
 }
 
@@ -176,6 +129,8 @@ export type B2BCoursesQuery = {
   /** `any`: in at least one category (default); `all`: in every one. */
   match?: 'any' | 'all'
   q?: string
+  /** `program` for grouped programs (these carry trainers), `course` for standalone B2B courses. */
+  kind?: 'program' | 'course'
   limit?: number
   offset?: number
 }
@@ -188,10 +143,73 @@ export function fetchB2BCourses(query: B2BCoursesQuery = {}): Promise<ApiB2BProg
   query.categoryIds?.forEach((id) => params.append('category_id', String(id)))
   if (query.match && query.match !== 'any') params.set('match', query.match)
   if (query.q?.trim()) params.set('q', query.q.trim())
+  if (query.kind) params.set('kind', query.kind)
   return getJson<ApiB2BProgramPage>(`/api/v1/b2b/courses?${params}`)
 }
 
 /** Curated groups of training fields with their live program counts. */
 export function fetchB2BTracks(): Promise<{ items: ApiB2BTrack[] }> {
   return getJson<{ items: ApiB2BTrack[] }>('/api/v1/b2b/tracks')
+}
+
+/** A trainer of the B2B library, with how many B2B programs they teach. */
+export type B2BTrainer = {
+  id: number
+  name: string
+  avatar: string | null
+  programs: number
+  /** Programs in the «المبيعات والنمو» track. */
+  salesPrograms: number
+  /** The field they teach most in. */
+  topCategory: string | null
+}
+
+const SALES_TRACK = 'sales-growth'
+const PAGE = 48
+let trainersRequest: Promise<B2BTrainer[]> | null = null
+
+/**
+ * Every trainer of the B2B library, built from the programs that carry them
+ * (`/b2b/courses?kind=program`, paged). Sales-track trainers come first, then by
+ * program count. One shared request per page load.
+ */
+export function fetchB2BTrainers(): Promise<B2BTrainer[]> {
+  if (trainersRequest) return trainersRequest
+  trainersRequest = (async () => {
+    const [first, tracks] = await Promise.all([
+      fetchB2BCourses({ kind: 'program', limit: PAGE }),
+      fetchB2BTracks().catch(() => ({ items: [] as ApiB2BTrack[] })),
+    ])
+    const offsets: number[] = []
+    for (let offset = PAGE; offset < first.total; offset += PAGE) offsets.push(offset)
+    const rest = await Promise.all(offsets.map((offset) => fetchB2BCourses({ kind: 'program', limit: PAGE, offset })))
+    const programs = [first, ...rest].flatMap((page) => page.items)
+    const salesIds = new Set(tracks.items.find((track) => track.key === SALES_TRACK)?.category_ids ?? [])
+
+    const byId = new Map<number, B2BTrainer & { fields: Map<string, number> }>()
+    for (const program of programs) {
+      const inSales = program.categories.some((category) => salesIds.has(category.category_id))
+      for (const trainer of program.trainers) {
+        const entry =
+          byId.get(trainer.trainer_id) ??
+          { id: trainer.trainer_id, name: trainer.name.trim(), avatar: trainer.avatar_url, programs: 0, salesPrograms: 0, topCategory: null, fields: new Map() }
+        entry.programs += 1
+        if (inSales) entry.salesPrograms += 1
+        if (!entry.avatar && trainer.avatar_url) entry.avatar = trainer.avatar_url
+        const field = program.category?.name
+        if (field) entry.fields.set(field, (entry.fields.get(field) ?? 0) + 1)
+        byId.set(trainer.trainer_id, entry)
+      }
+    }
+    return [...byId.values()]
+      .map(({ fields, ...trainer }) => ({
+        ...trainer,
+        topCategory: [...fields.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null,
+      }))
+      .sort((a, b) => b.salesPrograms - a.salesPrograms || b.programs - a.programs)
+  })()
+  trainersRequest.catch(() => {
+    trainersRequest = null
+  })
+  return trainersRequest
 }

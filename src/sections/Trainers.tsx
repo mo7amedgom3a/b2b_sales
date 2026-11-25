@@ -13,7 +13,7 @@ import {
 import { useEffect, useState } from 'react'
 import { useInViewOnce } from '../hooks/useInViewOnce'
 import { trainers } from '../content/ar'
-import { fetchExperts } from '../lib/api'
+import { fetchB2BTrainers } from '../lib/api'
 import { mergeTrainers } from '../lib/experts'
 import type { TrainerCard } from '../lib/experts'
 import { formatCount } from '../lib/format'
@@ -98,12 +98,12 @@ export function Trainers() {
   useEffect(() => {
     if (!inView) return
     let cancelled = false
-    fetchExperts()
-      .then((experts) => {
-        if (!cancelled) setPeople(mergeTrainers(experts))
+    fetchB2BTrainers()
+      .then((b2b) => {
+        if (!cancelled) setPeople(mergeTrainers(b2b))
       })
       .catch(() => {
-        // Keep the static README line-up when the public API is unreachable.
+        // Keep the bundled B2B snapshot when the public API is unreachable.
       })
     return () => {
       cancelled = true
@@ -122,7 +122,7 @@ export function Trainers() {
         <div className="trainers__source">
           <Tag tone="soft" className="library__live">
             <RefreshCw className={live ? 'icon-spin-slow' : undefined} aria-hidden="true" />
-            {live ? 'بيانات الخبراء محدّثة من منصة ماستري' : 'فريق الخبراء'}
+            {live ? 'مدربو مكتبة ماستري للأعمال، محدّثة من المنصة' : 'مدربو مكتبة ماستري للأعمال'}
           </Tag>
         </div>
 
@@ -172,7 +172,7 @@ export function Trainers() {
                   {person.courses && person.courses > 0 ? (
                     <div className="trainer__meta">
                       <BookOpen aria-hidden="true" />
-                      {formatCount(person.courses, 'دورة', 'دورات')}
+                      {formatCount(person.courses, 'برنامج', 'برامج')} للشركات
                     </div>
                   ) : null}
                 </div>

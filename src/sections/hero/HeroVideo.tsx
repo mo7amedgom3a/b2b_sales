@@ -1,7 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { ArrowUpLeft } from 'lucide-react'
 import { video } from '../../content/ar'
-import { fetchExperts } from '../../lib/api'
 import { mergeTrainers } from '../../lib/experts'
 import type { TrainerCard } from '../../lib/experts'
 import { Avatar } from '../../ui/Avatar'
@@ -65,24 +64,9 @@ export function HeroVideoFrame({ activate }: { activate: boolean }) {
 }
 
 /** «مع د. … و د. …»: the two speakers, linked to their profiles. */
-export function HeroVideoSpeakers({ activate }: { activate: boolean }) {
-  const [speakers, setSpeakers] = useState<TrainerCard[]>(() => pickSpeakers(mergeTrainers([])))
-
-  // Swap the initials for real photos once the expert data arrives (shared, cached request).
-  useEffect(() => {
-    if (!activate) return
-    let cancelled = false
-    fetchExperts()
-      .then((experts) => {
-        if (!cancelled) setSpeakers(pickSpeakers(mergeTrainers(experts)))
-      })
-      .catch(() => {
-        // Keep the initials.
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [activate])
+export function HeroVideoSpeakers() {
+  // The two founders: static profiles (they are the academy's own experts, not library trainers).
+  const speakers = pickSpeakers(mergeTrainers([]).filter((person) => person.founder))
 
   return (
     <div className="hero-video__speakers">

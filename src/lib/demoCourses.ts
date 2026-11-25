@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { fetchSalesProductCards } from './api'
-import type { ApiProductCard } from './api'
+import { fetchB2BCourses } from './api'
+import type { ApiB2BProgram } from './api'
 import { formatDuration } from './format'
 
 export type DemoCourse = {
@@ -13,22 +13,23 @@ export type DemoCourse = {
   duration: string | null
 }
 
-function toDemoCourse(card: ApiProductCard): DemoCourse | null {
-  const title = card.title?.trim()
+function toDemoCourse(program: ApiB2BProgram): DemoCourse | null {
+  const title = program.title?.replace(/\u2060/g, '').trim()
   if (!title) return null
+  const trainer = program.trainers[0]
   return {
-    id: card.slug,
+    id: program.slug ?? program.program_id,
     title,
-    image: card.image,
-    instructor: card.instructor_name?.trim() || null,
-    avatar: card.instructor_avatar,
-    lessons: card.lesson_count,
-    duration: formatDuration(card.duration_seconds),
+    image: program.image_url,
+    instructor: trainer?.name.trim() || null,
+    avatar: trainer?.avatar_url ?? null,
+    lessons: program.lesson_count,
+    duration: formatDuration(program.duration_seconds),
   }
 }
 
 /**
- * Real sales-catalog courses for the hero demo tables (planning, training,
+ * Real B2B library programs («المبيعات والنمو» track) for the demo tables (planning, training,
  * dashboard). The caller keeps its static mock rows until this resolves, and
  * forever if the API is unreachable. The request is delayed so it never
  * competes with the LCP window.
@@ -40,7 +41,8 @@ export function useDemoCourses(limit = 6) {
   useEffect(() => {
     let cancelled = false
     const timer = window.setTimeout(() => {
-      fetchSalesProductCards(limit)
+      // Programs carry their trainer; standalone B2B courses don't, so ask for programs.
+      fetchB2BCourses({ track: 'sales-growth', kind: 'program', limit })
         .then((page) => {
           if (cancelled) return
           const items = page.items

@@ -8,6 +8,7 @@
 @import "./styles/sections/reports.css";
 @import "./styles/sections/tool-calls.css";
 @import "./styles/sections/compare.css";
+@import "./styles/sections/ai.css";
 
 /* `dark:` utilities follow the site theme toggle (useTheme always sets data-theme). */
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
