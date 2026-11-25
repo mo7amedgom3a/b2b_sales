@@ -76,6 +76,7 @@ export function HowOrbit() {
             <svg className="orbit__mark">
               <use href="#ma-mark" />
             </svg>
+            <span className="orbit__name">أكاديمية المبيعات</span>
           </span>
         </div>
 

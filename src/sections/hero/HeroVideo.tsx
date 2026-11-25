@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
+import { ArrowUpLeft } from 'lucide-react'
 import { video } from '../../content/ar'
-import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion'
-import { loadGsap, MQ } from '../../motion/gsap'
 import { fetchExperts } from '../../lib/api'
 import { mergeTrainers } from '../../lib/experts'
 import type { TrainerCard } from '../../lib/experts'
@@ -15,26 +14,63 @@ function pickSpeakers(people: TrainerCard[]) {
 }
 
 /**
- * «ثلاث دقائق مع خبراء ماستري» inside the hero.
- *
- * A tall scroll track holds a sticky stage (title + video frame).
- * The frame has a fixed width/height; while the visitor scrolls, GSAP scrubs
- * only its transform so it rises from the bottom, enlarged, and settles fully
- * in view at its real size. The frame is the regular YouTube player (controls,
- * unmute, fullscreen): it autoplays muted on loop while visible and pauses
- * whenever the stage is scrolled away.
+ * The video window inside the hero. The poster paints with the page; the
+ * YouTube player (controls, unmute, fullscreen) mounts once `activate` turns
+ * true, autoplays muted on loop while visible and pauses when scrolled away.
  */
-export function HeroVideo() {
-  const reduce = usePrefersReducedMotion()
-  const trackRef = useRef<HTMLDivElement>(null)
+export function HeroVideoFrame({ activate }: { activate: boolean }) {
+  const frameRef = useRef<HTMLDivElement>(null)
   const iframeRef = useRef<HTMLIFrameElement>(null)
-  const [near, setNear] = useState(false)
   const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    const node = frameRef.current
+    const frame = iframeRef.current
+    if (!node || !frame || !loaded || typeof IntersectionObserver === 'undefined') return
+    const command = (func: 'playVideo' | 'pauseVideo') =>
+      frame.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
+    const observer = new IntersectionObserver(
+      (entries) => command(entries[0]?.isIntersecting ? 'playVideo' : 'pauseVideo'),
+      { threshold: 0.2 },
+    )
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [loaded])
+
+  return (
+    <div className="hero-video__frame" ref={frameRef}>
+      <div className="hero-video__media">
+        <img
+          className="hero-video__poster"
+          src={video.poster}
+          alt="مشهد من الفيديو التعريفي لماستري"
+          width="960"
+          height="540"
+          fetchPriority="low"
+        />
+        {activate && video.youtubeId ? (
+          <iframe
+            ref={iframeRef}
+            className={loaded ? 'hero-video__embed is-loaded' : 'hero-video__embed'}
+            src={youtubeEmbedSrc(video.youtubeId, { muted: true, loop: true })}
+            title={video.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            onLoad={() => setLoaded(true)}
+          />
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+/** «مع د. … و د. …»: the two speakers, linked to their profiles. */
+export function HeroVideoSpeakers({ activate }: { activate: boolean }) {
   const [speakers, setSpeakers] = useState<TrainerCard[]>(() => pickSpeakers(mergeTrainers([])))
 
   // Swap the initials for real photos once the expert data arrives (shared, cached request).
   useEffect(() => {
-    if (!near) return
+    if (!activate) return
     let cancelled = false
     fetchExperts()
       .then((experts) => {
@@ -46,192 +82,44 @@ export function HeroVideo() {
     return () => {
       cancelled = true
     }
-  }, [near])
-
-  // Mount the embed (and GSAP) only once the block is about to be seen — keeps the hero LCP lean.
-  useEffect(() => {
-    const node = trackRef.current
-    if (!node) return
-    if (typeof IntersectionObserver === 'undefined') {
-      setNear(true)
-      return
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setNear(true)
-          observer.disconnect()
-        }
-      },
-      { rootMargin: '600px 0px' },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [])
-
-  // Play while visible, pause when scrolled away.
-  useEffect(() => {
-    const node = trackRef.current
-    const frame = iframeRef.current
-    if (!node || !frame || !loaded) return
-    const command = (func: 'playVideo' | 'pauseVideo') =>
-      frame.contentWindow?.postMessage(JSON.stringify({ event: 'command', func, args: [] }), '*')
-    const observer = new IntersectionObserver(
-      (entries) => command(entries[0]?.isIntersecting ? 'playVideo' : 'pauseVideo'),
-      { threshold: 0.15 },
-    )
-    observer.observe(node)
-    return () => observer.disconnect()
-  }, [loaded])
-
-  // Scroll-scrubbed "rise and settle" (jisr.net style): the frame keeps a fixed
-  // width/height; only its transform is scrubbed — it starts low and enlarged,
-  // peeking from the bottom of the pinned stage, and settles at its real size.
-  useEffect(() => {
-    const track = trackRef.current
-    if (!track || !near || reduce) return
-    let cancelled = false
-    let cleanup = () => {}
-
-    void loadGsap()
-      .then(({ gsap, ScrollTrigger }) => {
-        if (cancelled) return
-        const stage = track.querySelector<HTMLElement>('.hero-video__stage')
-        const frame = track.querySelector<HTMLElement>('.hero-video__frame')
-        const intro = track.querySelector<HTMLElement>('.hero-video__intro')
-        if (!stage || !frame) return
-
-        const mm = gsap.matchMedia()
-        // Phones: no pinned stage. The hero fills the first screen, so the video
-        // is below the fold; it only animates in once its own area scrolls into view.
-        mm.add(MQ.mobile, () => {
-          gsap.set(frame, { transformPerspective: 900, transformOrigin: '50% 100%' })
-          gsap.fromTo(
-            frame,
-            { y: 70, scale: 0.84, rotateX: 22, autoAlpha: 0, borderRadius: 24 },
-            {
-              y: 0,
-              scale: 1,
-              rotateX: 0,
-              autoAlpha: 1,
-              borderRadius: 14,
-              ease: 'none',
-              scrollTrigger: { trigger: frame, start: 'top 98%', end: 'top 40%', scrub: 0.6 },
-            },
-          )
-          if (intro) {
-            gsap.fromTo(
-              intro,
-              { y: 24, autoAlpha: 0 },
-              { y: 0, autoAlpha: 1, ease: 'none', scrollTrigger: { trigger: intro, start: 'top 95%', end: 'top 65%', scrub: 0.6 } },
-            )
-          }
-        })
-
-        mm.add({ mobile: MQ.mobile, desktop: '(min-width: 768px)' }, (context) => {
-          const { mobile } = context.conditions as { mobile: boolean; desktop: boolean }
-          if (mobile) return
-          track.classList.add('is-scrubbed')
-
-          const startScale = mobile ? 1.12 : 1.32
-          // Start with the frame's top edge at ~70% of the stage height (only the top peeks in).
-          const startY = () => stage.clientHeight * (mobile ? 0.62 : 0.68) - frame.offsetTop
-
-          const headerH = () =>
-            parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 72
-
-          const timeline = gsap.timeline({
-            defaults: { ease: 'none' },
-            scrollTrigger: {
-              trigger: track,
-              start: () => `top top+=${headerH()}`,
-              end: 'bottom bottom',
-              scrub: mobile ? 0.5 : 0.9,
-              invalidateOnRefresh: true,
-            },
-          })
-
-          timeline.fromTo(
-            frame,
-            { y: startY, scale: startScale, borderRadius: mobile ? 18 : 28 },
-            { y: 0, scale: 1, borderRadius: mobile ? 14 : 20, duration: 1, ease: 'power2.out' },
-            0,
-          )
-          if (intro) timeline.fromTo(intro, { y: 24, autoAlpha: 0.35 }, { y: 0, autoAlpha: 1, duration: 0.55 }, 0)
-          // Hold the settled frame for a beat before the section scrolls on.
-          timeline.to({}, { duration: 0.25 })
-
-          return () => track.classList.remove('is-scrubbed')
-        })
-
-        ScrollTrigger.refresh()
-        cleanup = () => mm.revert()
-      })
-      .catch(() => {
-        // Without GSAP the frame simply shows at its settled size.
-      })
-
-    return () => {
-      cancelled = true
-      cleanup()
-    }
-  }, [near, reduce])
+  }, [activate])
 
   return (
-    <div className="hero-video" id="video">
-      <div className="hero-video__track" ref={trackRef}>
-        <div className="hero-video__stage">
-          <div className="ma-container hero-video__intro">
-            <span className="hero-video__kicker">
-              <span className="eyebrow__dot" aria-hidden="true" />
-              {video.kicker}
-            </span>
-            <h2 className="hero-video__title">{video.title}</h2>
-            <div className="hero-video__speakers">
-              <span className="hero-video__speaker-avatars" aria-hidden="true">
-                {speakers.map((person) => (
-                  <Avatar
-                    key={person.name}
-                    initial={person.initial}
-                    tone={person.tone}
-                    size={34}
-                    photo={person.photo}
-                    alt=""
-                  />
-                ))}
-              </span>
-              <span>
-                مع <b>{video.speakers[0]}</b> و<b>{video.speakers[1]}</b>
-              </span>
-            </div>
-            
-          </div>
-
-          <div className="hero-video__frame">
-            <div className="hero-video__media">
-              <img
-                className="hero-video__poster"
-                src={video.poster}
-                alt="مشهد من الفيديو التعريفي لماستري"
-                loading="lazy"
-                width="960"
-                height="540"
-              />
-              {near && video.youtubeId ? (
-                <iframe
-                  ref={iframeRef}
-                  className={loaded ? 'hero-video__embed is-loaded' : 'hero-video__embed'}
-                  src={youtubeEmbedSrc(video.youtubeId, { muted: true, loop: true })}
-                  title={video.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  onLoad={() => setLoaded(true)}
-                />
+    <div className="hero-video__speakers">
+      {speakers.length > 0 ? (
+        <>
+          <span className="hero-video__speakers-label">مع</span>
+          {speakers.map((person, index) => (
+            <Fragment key={person.name}>
+              {index > 0 ? (
+                <span className="hero-video__speakers-sep" aria-hidden="true">
+                  و
+                </span>
               ) : null}
-            </div>
-          </div>
-        </div>
-      </div>
+              <a
+                className="hero-video__speaker"
+                href={person.profile}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`الملف الشخصي لـ${person.name} على منصة ماستري — يفتح في تبويب جديد`}
+              >
+                <Avatar initial={person.initial} tone={person.tone} size={36} photo={person.photo} alt="" />
+                <span className="hero-video__speaker-text">
+                  <span className="hero-video__speaker-name">
+                    {person.name}
+                    <ArrowUpLeft aria-hidden="true" />
+                  </span>
+                  <span className="hero-video__speaker-title">{person.title ?? person.role}</span>
+                </span>
+              </a>
+            </Fragment>
+          ))}
+        </>
+      ) : (
+        <span>
+          مع <b>{video.speakers[0]}</b> و<b>{video.speakers[1]}</b>
+        </span>
+      )}
     </div>
   )
 }

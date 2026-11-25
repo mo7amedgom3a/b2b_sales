@@ -53,10 +53,13 @@ export function Nav() {
   return (
     <header className="nav">
       <div className="ma-container nav__inner">
-        <a className="nav__brand" href="#top" aria-label={site.name}>
-          <svg className="ma-logo" width="150" height="17" role="img" aria-label="Mastery Academy">
-            <use href="#ma-logo" />
-          </svg>
+        <a className="nav__brand" href="#top" aria-label={`${site.name} — أكاديمية المبيعات`}>
+          <span className="nav__brand-lockup">
+            <svg className="ma-logo" width="150" height="17" role="img" aria-label="Mastery Academy">
+              <use href="#ma-logo" />
+            </svg>
+            <span className="nav__brand-sub" aria-hidden="true">أكاديمية المبيعات</span>
+          </span>
           <span className="nav__b2b">الأعمال</span>
         </a>
 

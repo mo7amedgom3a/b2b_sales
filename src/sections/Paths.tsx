@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   BookOpen,
   Building2,
   CalendarClock,
@@ -24,7 +23,7 @@ import {
 import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Skeleton } from '@/components/ui/skeleton'
+import AIToolCalls, { type ToolCallItem } from '@/components/kokonutui/ai-tool-calls'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { paths } from '../content/ar'
 import { SITE_URL } from '../lib/api'
@@ -34,19 +33,16 @@ import { useInViewAutoplay } from '../motion/useInViewAutoplay'
 import { TypewriterChars } from '../motion/TypewriterText'
 import { useExitGhosts, useTypewriter } from '../motion/useTypewriter'
 import { Reveal } from '../motion/Reveal'
-import { Button } from '../ui/Button'
 import { SecHead } from '../ui/SecHead'
 import { Tag } from '../ui/Tag'
-import { Todo } from '../ui/Todo'
 
 type Selection = Record<string, number>
 
-const initialSelection: Selection = { competency: 0, gap: 2, sector: 1, level: 0, env: 0 }
+const initialSelection: Selection = { competency: 2, sector: 1, level: 0, env: 0 }
 
 const dimensionIcons: Record<string, LucideIcon> = {
   core: Target,
   competency: Target,
-  gap: TriangleAlert,
   sector: Building2,
   level: UserCog,
   env: MapPin,
@@ -168,10 +164,11 @@ export function Paths() {
     optionOf('competency')
   const trackKey =
     competencyDim && 'tracks' in competencyDim ? competencyDim.tracks[selection.competency ?? 0] : undefined
-  const { courses, status } = usePathCourses(competencyTerm, optionOf('gap'), trackKey)
+  // The gap and the competency are one skill now: search it once, not twice.
+  const { courses, status } = usePathCourses(competencyTerm, competencyTerm, trackKey)
   const track = useB2BTrack(trackKey)
 
-  const composed = `مسار ${optionOf('level')} (${optionOf('env')}) في ${optionOf('sector')} — يعالج فجوة «${optionOf('gap')}» ويبني جدارة «${optionOf('competency')}».`
+  const composed = `مسار ${optionOf('level')} (${optionOf('env')}) في ${optionOf('sector')} — يبني جدارة «${optionOf('competency')}» ويعالج فجوتها.`
   const { text: typedPath, phase } = useTypewriter([composed], {
     loop: false,
     restartKey: composed,
@@ -187,6 +184,48 @@ export function Paths() {
     6,
     Math.round((Array.from(typedPath).length / Math.max(1, Array.from(composed).length)) * 100),
   )
+
+  // Controlled task states, driven by the typed path and the live course request.
+  const searching = status === 'loading'
+  const trainerCount = new Set(courses.map((course) => course.instructor).filter(Boolean)).size
+  const pathCalls: ToolCallItem[] = [
+    {
+      id: 'compose',
+      tool: 'compose_path',
+      icon: <Wand2 aria-hidden="true" />,
+      tone: 'sky',
+      running: 'يصوغ المسار',
+      done: 'صاغ المسار',
+      detail: `${optionOf('level')} · ${optionOf('sector')}`,
+      result: `${paths.groups.length} أبعاد`,
+      state: typed ? 'output-available' : 'input-available',
+    },
+    ...(typed
+      ? ([
+          {
+            id: 'search',
+            tool: 'search_library',
+            icon: <BookOpen aria-hidden="true" />,
+            tone: 'lilac',
+            running: 'يبحث في مكتبة ماستري',
+            done: 'بحث في مكتبة ماستري',
+            detail: competencyTerm,
+            result: `${courses.length} دورات`,
+            state: searching ? 'input-available' : 'output-available',
+          },
+          {
+            id: 'trainers',
+            tool: 'match_trainers',
+            icon: <UsersRound aria-hidden="true" />,
+            tone: 'coral',
+            running: 'يطابق الخبراء',
+            done: 'طابق الخبراء',
+            result: trainerCount ? `${trainerCount} خبراء` : 'جاهز',
+            state: searching ? 'input-available' : 'output-available',
+          },
+        ] satisfies ToolCallItem[])
+      : []),
+  ]
 
   const shuffle = () => {
     setSelection(
@@ -235,7 +274,6 @@ export function Paths() {
                               return <PartIcon aria-hidden="true" />
                             })()}
                             {dim.label}
-                            {'hint' in dim && dim.hint ? <span className="dim__hint">{dim.hint}</span> : null}
                           </span>
                         ) : null}
                         <ToggleGroup
@@ -295,8 +333,7 @@ export function Paths() {
                   <div className="builder__meta">
                     <Tag tone="yellow" icon={<UserCog aria-hidden="true" />}>{optionOf('level')}</Tag>
                     <Tag tone="sky" icon={<Building2 aria-hidden="true" />}>{optionOf('sector')}</Tag>
-                    <Tag tone="coral" icon={<TriangleAlert aria-hidden="true" />}>{optionOf('gap')}</Tag>
-                    <Tag tone="soft" icon={<Target aria-hidden="true" />}>{optionOf('competency')}</Tag>
+                    <Tag tone="coral" icon={<TriangleAlert aria-hidden="true" />}>{optionOf('competency')}</Tag>
                     <Tag tone="soft" icon={<MapPin aria-hidden="true" />}>{optionOf('env')}</Tag>
                   </div>
                   <div className="builder__bar">
@@ -319,30 +356,25 @@ export function Paths() {
                         {track.categories.length} مجالات · {track.program_count} برنامج
                       </span>
                     ) : null}
-                    {status === 'loading' || !typed ? (
-                      <div className="builder__loading" aria-hidden="true">
-                        {[0, 1, 2].map((item) => (
-                          <div className="path-course path-course--ghost" key={item}>
-                            <Skeleton className="size-9 rounded-md" />
-                            <span className="flex flex-1 flex-col gap-1.5">
-                              <Skeleton className="h-2.5 w-3/4" />
-                              <Skeleton className="h-2 w-1/2" />
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <>
-                        <ul className="path-courses" key={courses.map((course) => course.slug).join()}>
-                          <AnimatePresence initial>
-                            {courses.map((course, index) => (
-                              <CourseRow course={course} index={index} key={course.slug} />
-                            ))}
-                          </AnimatePresence>
-                        </ul>
-                        <TrainerStack courses={courses} />
-                      </>
-                    )}
+                    {/* Real work, shown as the agent's tasks: compose → search the library → match trainers. */}
+                    <div className="builder__agent">
+                      <AIToolCalls
+                        key={composed}
+                        calls={pathCalls}
+                        answer={
+                          <>
+                            <ul className="path-courses" key={courses.map((course) => course.slug).join()}>
+                              <AnimatePresence initial>
+                                {courses.map((course, index) => (
+                                  <CourseRow course={course} index={index} key={course.slug} />
+                                ))}
+                              </AnimatePresence>
+                            </ul>
+                            <TrainerStack courses={courses} />
+                          </>
+                        }
+                      />
+                    </div>
                   </div>
 
                   <div className="builder__foot">
@@ -360,19 +392,6 @@ export function Paths() {
             </Reveal>
           </div>
         </div>
-
-        <Reveal>
-          <p className="paths__example">
-            <Sparkles size={14} aria-hidden="true" className="paths__example-icon" />
-            {paths.example} <Todo>بقية القطاعات السبعة</Todo>
-          </p>
-          <div className="paths__cta">
-            <Button href="#booking" variant="primary">
-              {paths.cta}
-              <ArrowRight className="btn-arrow" size={18} aria-hidden="true" />
-            </Button>
-          </div>
-        </Reveal>
       </div>
     </section>
   )

@@ -1,11 +1,9 @@
 import { useRef, useState } from 'react'
 import { story } from '../content/ar'
 import { Reveal } from '../motion/Reveal'
-import { Button } from '../ui/Button'
 import {
   ArrowLeft,
   MessagesSquare,
-  Play,
   Quote,
   SearchCheck,
   TrendingUp,

@@ -346,19 +346,32 @@ export const paths = {
   lead: 'مسار فريقك لا يُختار من قائمة جاهزة، بل يُبنى من أربعة أبعاد. تغيير بُعد واحد يعطيك مساراً مختلفاً.',
   dimensions: [
     {
-      key: 'gap',
-      label: 'الفجوات',
-      options: ['التنقيب', 'الإقناع', 'الاعتراضات', 'الإغلاق', 'المتابعة', 'خدمة العملاء'],
-      hint: 'أمثلة لما يكشفه التشخيص في فريقك تحديداً',
-    },
-    {
       key: 'competency',
-      label: 'الجدارات',
-      options: ['التنقيب والتأهيل', 'المحادثات البيعية', 'إدارة الاعتراضات', 'التفاوض', 'الإغلاق', 'خدمة العملاء', 'الموارد البشرية'],
+      label: 'الفجوات والجدارات',
+      /** Gaps and competencies merged into one list: one skill, one chip, no repeats. */
+      options: [
+        'التنقيب والتأهيل',
+        'المحادثات البيعية',
+        'إدارة الاعتراضات',
+        'التفاوض',
+        'الإغلاق',
+        'المتابعة',
+        'خدمة العملاء',
+        'الموارد البشرية',
+      ],
       /** Catalog search keyword per option (same order) for the live course list. */
-      terms: ['التنقيب', 'المحادثات', 'الاعتراضات', 'التفاوض', 'الإغلاق', 'خدمة العملاء', 'الموارد البشرية'],
+      terms: ['التنقيب', 'المحادثات', 'الاعتراضات', 'التفاوض', 'الإغلاق', 'المتابعة', 'خدمة العملاء', 'الموارد البشرية'],
       /** B2B library track (combined categories, `/api/v1/b2b/tracks`) per option (same order). */
-      tracks: ['sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'sales-growth', 'leadership-people'],
+      tracks: [
+        'sales-growth',
+        'sales-growth',
+        'sales-growth',
+        'sales-growth',
+        'sales-growth',
+        'sales-growth',
+        'sales-growth',
+        'leadership-people',
+      ],
     },
 
     {
@@ -379,14 +392,11 @@ export const paths = {
   ],
   /** Option groups as shown: gaps + competencies merged (open by default); the rest collapse. */
   groups: [
-    { key: 'core', label: 'الفجوات والجدارات', dims: ['gap', 'competency'] },
+    { key: 'core', label: 'الفجوات والجدارات', dims: ['competency'] },
     { key: 'sector', label: 'القطاع', dims: ['sector'] },
     { key: 'level', label: 'المستوى الإداري', dims: ['level'] },
     { key: 'env', label: 'بيئة البيع', dims: ['env'] },
   ],
-  example:
-    'موظف مبيعات ميداني في شركة تأمين فجوته في إدارة الاعتراضات والمتابعة، يأخذ مساراً مختلفاً تماماً عن مدير مبيعات في شركة عقارية فجوته في توزيع المستهدفات وقراءة البيانات، وعن موظف خدمة عملاء فجوته في التعامل مع الشكاوى.',
-  cta: 'اعرف مسار فريقك في جلسة التشخيص المجانية',
   coursesTitle: 'دورات حقيقية من مكتبة ماستري لهذا المسار',
   builder: {
     title: 'مسار مقترح',
@@ -514,60 +524,97 @@ export const story = {
   ],
 } as const
 
+export type TrainerPerson = {
+  name: string
+  role: string
+  initial: string
+  tone: string
+  photo?: string
+  /** The two co-founders get a featured card and a public expert profile. */
+  founder?: boolean
+  /** One-line descriptor used under the name. */
+  title?: string
+  bio?: string
+  focus?: string[]
+  profile?: string
+}
+
+const trainerPeople: TrainerPerson[] = [
+  {
+    name: 'د. ثابت حجازي',
+    role: 'شريك مؤسس والمدير التنفيذي · إتقان المبيعات والتسويق',
+    initial: 'ث',
+    tone: 'yellow',
+    photo: 'https://s3.eu-west-1.amazonaws.com/trainer.emasteryacademy.com/4r3ydzma8m.webp',
+    founder: true,
+    title: 'خبير في المبيعات والقيادة',
+    bio: 'درّب أكثر من 12 ألف متدرب في أكثر من 100 منظمة عربية، ويقود أكاديمية ماستري من بريطانيا.',
+    focus: ['المبيعات وخدمة العملاء', 'التسويق المتكامل', 'القيادة الإدارية'],
+    profile:
+      'https://landing.emasteryacademy.com/experts/2-%D8%AB%D8%A7%D8%A8%D8%AA_%D8%AD%D8%AC%D8%A7%D8%B2%D9%8A',
+  },
+  {
+    name: 'د. سهل مهدي',
+    role: 'شريك مؤسس · خبير التسويق الإلكتروني',
+    initial: 'س',
+    tone: 'lilac',
+    photo: 'https://s3.eu-west-1.amazonaws.com/trainer.emasteryacademy.com/hbc570co9e.png',
+    founder: true,
+    title: 'خبير في التسويق والقيادة',
+    bio: 'خبير التسويق الإلكتروني والتجارة الرقمية، ومستشار تسويقي لعدد من الشركات الصغيرة والمتوسطة.',
+    focus: ['التسويق الإلكتروني', 'التجارة الإلكترونية', 'القيادة'],
+    profile:
+      'https://landing.emasteryacademy.com/experts/3-%D8%B3%D9%87%D9%84_%D9%85%D9%87%D8%AF%D9%8A',
+  },
+]
+
+const trainerTeam: TrainerPerson[] = [
+  {
+    name: 'إبراهيم سلامة',
+    role: 'مدرب مبيعات',
+    photo: '/assets/trainers/ibrahim-salama.png',
+    initial: 'إ',
+    tone: 'sky',
+  },
+  {
+    name: 'أيمن السيد',
+    role: 'مدرب مبيعات',
+    photo: '/assets/trainers/ayman-elsayed.png',
+    initial: 'أ',
+    tone: 'coral',
+  },
+  {
+    name: 'نشمي الحربي',
+    role: 'خبير مبيعات',
+    initial: 'نش',
+    tone: 'green',
+  },
+  {
+    name: 'نايف العوبثاني',
+    role: 'خبير مبيعات',
+    initial: 'نا',
+    tone: 'purple',
+  },
+  {
+    name: 'الحارث العمري',
+    role: 'خبير مبيعات',
+    initial: 'ح',
+    tone: 'yellow',
+  },
+  {
+    name: 'غانم العنزي',
+    role: 'خبير مبيعات',
+    initial: 'غ',
+    tone: 'sky',
+  },
+]
+
 export const trainers = {
   title: 'يدرّب فريقك من باع وقاد فرق مبيعات، لا مجرد محاضرين',
   lead: 'نخبة من المدربين العرب ذوي الخبرة العالية في المبيعات وخدمة العملاء والقيادة، يدرّبون على مواقف من واقع عمل فريقك.',
   people: [
-    {
-      name: 'د. ثابت حجازي',
-      role: 'شريك مؤسس والمدير التنفيذي · إتقان المبيعات والتسويق',
-      initial: 'ث',
-      tone: 'yellow',
-    },
-    {
-      name: 'د. سهل مهدي',
-      role: 'شريك مؤسس · خبير مبيعات',
-      initial: 'س',
-      tone: 'lilac',
-    },
-    {
-      name: 'إبراهيم سلامة',
-      role: 'مدرب مبيعات',
-      photo: '/assets/trainers/ibrahim-salama.png',
-      initial: 'إ',
-      tone: 'sky',
-    },
-    {
-      name: 'أيمن السيد',
-      role: 'مدرب مبيعات',
-      photo: '/assets/trainers/ayman-elsayed.png',
-      initial: 'أ',
-      tone: 'coral',
-    },
-    {
-      name: 'نشمي الحربي',
-      role: 'خبير مبيعات',
-      initial: 'نش',
-      tone: 'green',
-    },
-    {
-      name: 'نايف العوبثاني',
-      role: 'خبير مبيعات',
-      initial: 'نا',
-      tone: 'purple',
-    },
-    {
-      name: 'الحارث العمري',
-      role: 'خبير مبيعات',
-      initial: 'ح',
-      tone: 'yellow',
-    },
-    {
-      name: 'غانم العنزي',
-      role: 'خبير مبيعات',
-      initial: 'غ',
-      tone: 'sky',
-    },
+    ...trainerPeople,
+    ...trainerTeam,
   ],
   criteria: ['خبرة عملية في الميدان', 'مؤهل علمي وشهادات مهنية', 'مهارة مثبتة في نقل المعرفة'],
 } as const

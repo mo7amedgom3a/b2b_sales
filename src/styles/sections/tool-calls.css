@@ -1,0 +1,48 @@
+/* ---------- AI tool calls (Kokonut, adapted): agent tasks instead of loaders ----------
+   Minimal by design: one line per task, kit colours only, no skeleton bars. */
+.tc { font-family: var(--font-body); }
+.tc-ink { color: var(--text); }
+.tc-muted { color: var(--text-muted); }
+.tc-faint { color: color-mix(in srgb, var(--text) 42%, transparent); }
+.tc-result { color: var(--text); font-weight: 600; }
+.group:hover .group-hover\:tc-ink { color: var(--text); }
+.tc-head:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.tc-head:disabled { cursor: default; }
+.tc-list { border-color: var(--line); }
+.tc-prompt { background: color-mix(in srgb, var(--text) 6%, transparent); color: var(--text); }
+.tc-answer { color: var(--text); }
+
+/* Folded icon stack */
+.tc-chip { box-shadow: 0 0 0 1.5px var(--surface); }
+.tc-chip svg { width: 10px; height: 10px; }
+.tc-chip-icon { display: grid; place-items: center; }
+.tc-chip--sky { background: color-mix(in srgb, var(--sky) 22%, var(--surface)); color: var(--sky); }
+.tc-chip--lilac { background: color-mix(in srgb, var(--lilac) 28%, var(--surface)); color: color-mix(in srgb, var(--lilac) 55%, var(--text)); }
+.tc-chip--coral { background: color-mix(in srgb, var(--coral) 22%, var(--surface)); color: var(--coral); }
+.tc-chip--yellow { background: color-mix(in srgb, var(--yellow) 32%, var(--surface)); color: color-mix(in srgb, var(--yellow) 45%, var(--text)); }
+.tc-chip--green { background: color-mix(in srgb, var(--green) 26%, var(--surface)); color: color-mix(in srgb, var(--green) 45%, var(--text)); }
+.tc-chip--neutral { background: var(--surface); color: var(--text-muted); }
+.tc-chip--fail { background: color-mix(in srgb, var(--pink) 18%, var(--surface)); color: var(--pink); }
+
+/* Row icon ink */
+.tc-ink-icon svg { width: 14px; height: 14px; }
+.tc-tone--sky { color: var(--sky); }
+.tc-tone--lilac { color: color-mix(in srgb, var(--lilac) 60%, var(--text)); }
+.tc-tone--coral { color: var(--coral); }
+.tc-tone--yellow { color: color-mix(in srgb, var(--yellow) 55%, var(--text)); }
+.tc-tone--green { color: color-mix(in srgb, var(--green) 50%, var(--text)); }
+.tc-tone--neutral { color: var(--text-muted); }
+.tc-tone--fail { color: var(--pink); }
+
+/* Dark theme: the global "icons are coral" rule must not repaint these. */
+:root[data-theme="dark"] .tc svg.lucide { color: currentColor; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .tc svg.lucide { color: currentColor; }
+}
+
+/* Where the tasks sit: quiet while typing, then a list → one line → the answer. */
+.agent-run { display: block; padding-block-start: 6px; }
+.agent-run--idle { min-height: 28px; }
+.agent-run .tc { gap: 14px; }
+.builder__agent { margin-block-start: 8px; }
+.builder__agent .tc { gap: 10px; }

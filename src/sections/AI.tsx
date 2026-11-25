@@ -8,7 +8,6 @@ import {
   Gauge,
   GraduationCap,
   Info,
-  Keyboard,
   ListChecks,
   MessageSquare,
   Network,
@@ -25,7 +24,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { useReducedMotion } from 'motion/react'
-import { Skeleton } from '@/components/ui/skeleton'
+import type { ToolCallItem } from '@/components/kokonutui/ai-tool-calls'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ai, demoPeople } from '../content/ar'
@@ -38,6 +37,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, kitColor } from '../
 import { SecHead } from '../ui/SecHead'
 import { Avatar } from '../ui/Avatar'
 import { ScrollArrows } from '../ui/ScrollArrows'
+import { AgentRun, agentRunMs } from '../ui/AgentRun'
 import { Tag } from '../ui/Tag'
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 
@@ -92,31 +92,48 @@ function MockPrompt({ demo }: { demo: Sequence }) {
   )
 }
 
-/** Skeleton while the prompt is typed/analysed; the answer only after. */
-function MockStage({ demo, children }: { demo: Sequence; children: ReactNode }) {
-  if (demo.resultVisible) return <div key={demo.resultKey} className="mock__answer">{children}</div>
+/** Nothing while the prompt types; then the agent's tasks stream in, fold, and the answer shows. */
+function MockStage({ demo, calls, children }: { demo: Sequence; calls: readonly ToolCallItem[]; children: ReactNode }) {
   return (
-    <div className={demo.phase === 'working' ? 'mock__loading is-working' : 'mock__loading'} aria-hidden="true">
-      <span className="mock__loading-label">
-        {demo.phase === 'working' ? (
-          <>
-            <span className="pulse" /> يحلّل الطلب…
-          </>
-        ) : (
-          <>
-            <Keyboard /> يكتب…
-          </>
-        )}
-      </span>
-      <Skeleton className="mock__loading-bar" />
-      <Skeleton className="mock__loading-bar" />
-      <Skeleton className="mock__loading-bar" />
-    </div>
+    <AgentRun active={demo.phase === 'working' || demo.phase === 'showing'} runKey={demo.resultKey} calls={calls}>
+      <div className="mock__answer">{children}</div>
+    </AgentRun>
   )
 }
 
+const ic = (Icon: typeof Bot) => <Icon aria-hidden="true" />
+
+const simCalls: ToolCallItem[] = [
+  { id: 'scenario', tool: 'load_scenario', icon: ic(Bot), tone: 'sky', running: 'يجهّز العميل الافتراضي', done: 'جهّز العميل الافتراضي', detail: 'اعتراض السعر', result: 'تأمين', duration: 850 },
+  { id: 'run', tool: 'run', icon: ic(Radio), tone: 'lilac', running: 'يدير الحوار', done: 'أدار الحوار', result: '4 ردود', duration: 950 },
+  { id: 'score', tool: 'score', icon: ic(Gauge), tone: 'green', running: 'يقيّم الأداء', done: 'قيّم الأداء', result: '82 من 100', duration: 750 },
+]
+
+const lessonCalls: ToolCallItem[] = [
+  { id: 'lesson', tool: 'read_lesson', icon: ic(BookOpenCheck), tone: 'sky', running: 'يقرأ الدرس', done: 'قرأ الدرس', detail: 'خدمة العملاء', result: '12 دقيقة', duration: 850 },
+  { id: 'context', tool: 'read_context', icon: ic(UsersRound), tone: 'lilac', running: 'يربطه ببيئة عملك', done: 'ربطه ببيئة عملك', result: '3 أمثلة', duration: 900 },
+  { id: 'quiz', tool: 'quiz', icon: ic(ListChecks), tone: 'coral', running: 'يجهّز سؤال تحقق', done: 'جهّز سؤال تحقق', result: 'جاهز', duration: 700 },
+]
+
+const mcpCalls: ToolCallItem[][] = [
+  [
+    { id: 'conn', tool: 'mcp_connect', icon: ic(Network), tone: 'sky', running: 'يتصل بماستري', done: 'اتصل بماستري', detail: 'MCP', result: 'آمن', duration: 700 },
+    { id: 'hours', tool: 'query_hours', icon: ic(Timer), tone: 'lilac', running: 'يجمع ساعات التدريب', done: 'جمع ساعات التدريب', detail: 'هذا الشهر', result: '5 موظفين', duration: 900 },
+  ],
+  [
+    { id: 'conn', tool: 'mcp_connect', icon: ic(Network), tone: 'sky', running: 'يتصل بماستري', done: 'اتصل بماستري', detail: 'MCP', result: 'آمن', duration: 700 },
+    { id: 'groups', tool: 'query_groups', icon: ic(BarChart3), tone: 'lilac', running: 'يقارن المجموعات', done: 'قارن المجموعات', result: '4 مجموعات', duration: 900 },
+  ],
+  [
+    { id: 'conn', tool: 'mcp_connect', icon: ic(Network), tone: 'sky', running: 'يتصل بماستري', done: 'اتصل بماستري', detail: 'MCP', result: 'آمن', duration: 700 },
+    { id: 'gap', tool: 'read_gap', icon: ic(Target), tone: 'lilac', running: 'يقرأ فجوة التفاوض', done: 'قرأ فجوة التفاوض', result: 'المجموعة كاملة', duration: 850 },
+    { id: 'build', tool: 'build_scenario', icon: ic(Wand2), tone: 'coral', running: 'يبني السيناريو', done: 'بنى السيناريو', result: '3 مراحل', duration: 900 },
+  ],
+]
+
 function useMockSequence(prompts: readonly string[], { paused, onCycle, onProgress }: MockProps, showMs = 5200) {
-  const demo = useDemoSequence(prompts, { paused, onCycle, showMs, jitterMs: [36, 70] })
+  // Same rhythm as the demo + reports: quick typing, tasks, then time to read.
+  const demo = useDemoSequence(prompts, { paused, onCycle, showMs, typeMs: 40, jitterMs: [26, 58], workingMs: 120, clearMs: 260 })
   useEffect(() => {
     onProgress?.(demo.progress)
   }, [demo.progress, onProgress])
@@ -139,7 +156,7 @@ function ScoreRing({ value }: { value: number }) {
 }
 
 function SimMock(props: MockProps) {
-  const demo = useMockSequence(simPrompts, props, 6400)
+  const demo = useMockSequence(simPrompts, props, agentRunMs(simCalls) + 5200)
   return (
     <div className="mock rise">
       <div className="mock__top">
@@ -151,7 +168,7 @@ function SimMock(props: MockProps) {
       <div className="mock__body">
         <MockPrompt demo={demo} />
         <div className="mock__result">
-          <MockStage demo={demo}>
+          <MockStage demo={demo} calls={simCalls}>
           <div className="res-chat rise">
             {simChat.map((line, index) => (
               <span
@@ -196,7 +213,7 @@ function SimMock(props: MockProps) {
 }
 
 function LessonMock(props: MockProps) {
-  const demo = useMockSequence(lessonPrompts, props, 6000)
+  const demo = useMockSequence(lessonPrompts, props, agentRunMs(lessonCalls) + 5000)
   return (
     <div className="mock rise">
       <div className="mock__top">
@@ -208,7 +225,7 @@ function LessonMock(props: MockProps) {
       <div className="mock__body">
         <MockPrompt demo={demo} />
         <div className="mock__result">
-          <MockStage demo={demo}>
+          <MockStage demo={demo} calls={lessonCalls}>
           <div className="res-chat rise">
             {lessonChat.map((line, index) => (
               <span
@@ -284,7 +301,7 @@ function GroupsChart({ paused }: { paused: boolean }) {
 const mcpTop = [...demoPeople].sort((a, b) => b.hours - a.hours).slice(0, 5)
 
 function McpMock(props: MockProps) {
-  const demo = useMockSequence(mcpPrompts, props, 5600)
+  const demo = useMockSequence(mcpPrompts, props, Math.max(...mcpCalls.map(agentRunMs)) + 4800)
   const index = demo.step
 
   return (
@@ -298,7 +315,7 @@ function McpMock(props: MockProps) {
       <div className="mock__body">
         <MockPrompt demo={demo} />
         <div className="mock__result">
-          <MockStage demo={demo}>
+          <MockStage demo={demo} calls={mcpCalls[index] ?? mcpCalls[0]}>
             {index === 0 ? (
               <Table className="mock__table">
                 <TableHeader>

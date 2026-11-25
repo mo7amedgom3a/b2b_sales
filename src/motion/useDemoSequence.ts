@@ -19,6 +19,11 @@ type Options = {
   jitterMs?: readonly [number, number]
   /** Called after the last prompt's result has been shown (one full cycle). */
   onCycle?: () => void
+  /**
+   * Classbase-style scenes: when the demo comes back into view (paused → playing),
+   * replay the current scene from its first frame instead of resuming mid-way.
+   */
+  replayOnEnter?: boolean
 }
 
 /**
@@ -38,6 +43,7 @@ export function useDemoSequence(prompts: readonly string[], options: Options = {
     typeMs = 52,
     jitterMs = [38, 78],
     onCycle,
+    replayOnEnter = true,
   } = options
 
   const onCycleRef = useRef(onCycle)
@@ -108,6 +114,17 @@ export function useDemoSequence(prompts: readonly string[], options: Options = {
     },
     [reduce],
   )
+
+  // Re-entering the viewport replays the current scene from the start.
+  const wasPaused = useRef(paused)
+  useEffect(() => {
+    const resumed = wasPaused.current && !paused
+    wasPaused.current = paused
+    if (resumed && replayOnEnter && !reduce) {
+      setRun((value) => value + 1)
+      setPhase('typing')
+    }
+  }, [paused, replayOnEnter, reduce])
 
   return {
     step,

@@ -5,16 +5,16 @@ import {
   Flame,
   Gauge,
   GraduationCap,
-  Info,
-  Keyboard,
   MousePointerClick,
   Radio,
   RefreshCw,
   Route,
+  Search,
   SendHorizontal,
   Sparkles,
   Stethoscope,
   Target,
+  Timer,
   UsersRound,
   Video,
 } from 'lucide-react'
@@ -33,7 +33,7 @@ import {
   YAxis,
 } from 'recharts'
 import { ChartContainer, type ChartConfig } from '@/components/ui/chart'
-import { Skeleton } from '@/components/ui/skeleton'
+import type { ToolCallItem } from '@/components/kokonutui/ai-tool-calls'
 import { demoPeople, heroDemoSteps } from '../../content/ar'
 import type { HeroDemoKind } from '../../content/ar'
 import { useDemoCourses } from '../../lib/demoCourses'
@@ -43,6 +43,7 @@ import { useInViewAutoplay } from '../../motion/useInViewAutoplay'
 import { TypewriterChars } from '../../motion/TypewriterText'
 import { useDemoSequence } from '../../motion/useDemoSequence'
 import { Avatar } from '../../ui/Avatar'
+import { AgentRun, agentRunMs } from '../../ui/AgentRun'
 import { Tag } from '../../ui/Tag'
 import { AnimateIcon, AnimatedAlert, AnimatedCheck, AnimatedMinus } from '../../ui/animated-icons'
 
@@ -338,21 +339,59 @@ function Result({ kind, courses }: { kind: HeroDemoKind; courses: DemoCourse[] }
   return <DashResult />
 }
 
+/* ---------- The agent's tasks per step (shown instead of a loader) ---------- */
+
+const ic = (Icon: LucideIcon) => <Icon aria-hidden="true" />
+
+const stepCalls: Record<HeroDemoKind, ToolCallItem[]> = {
+  gaps: [
+    { id: 'team', tool: 'read_team', icon: ic(UsersRound), tone: 'sky', running: 'يقرأ بيانات الفريق', done: 'قرأ بيانات الفريق', detail: '5 موظفين', result: '48 محاكاة', duration: 850 },
+    { id: 'score', tool: 'score_skills', icon: ic(Gauge), tone: 'lilac', running: 'يقيس المهارات', done: 'قاس المهارات', detail: '4 مهارات', result: 'فجوتان', duration: 950 },
+    { id: 'rank', tool: 'rank_gaps', icon: ic(Stethoscope), tone: 'coral', running: 'يرتّب الأولويات', done: 'رتّب الأولويات', result: 'الاعتراضات أولاً', duration: 800 },
+  ],
+  path: [
+    { id: 'lib', tool: 'search_library', icon: ic(Search), tone: 'sky', running: 'يبحث في المكتبة', done: 'بحث في المكتبة', detail: '188 دورة', result: '12 مطابقة', duration: 900 },
+    { id: 'gap', tool: 'match_gap', icon: ic(Target), tone: 'lilac', running: 'يطابقها مع الفجوة', done: 'طابقها مع الفجوة', detail: 'الاعتراضات · تأمين', result: '4 دورات', duration: 900 },
+    { id: 'plan', tool: 'build_path', icon: ic(Route), tone: 'coral', running: 'يبني المسار', done: 'بنى المسار', result: '4 أسابيع', duration: 850 },
+  ],
+  training: [
+    { id: 'gaps', tool: 'read_gaps', icon: ic(Stethoscope), tone: 'sky', running: 'يقرأ فجوات الفريق', done: 'قرأ فجوات الفريق', result: 'فجوتان', duration: 800 },
+    { id: 'lessons', tool: 'pick_lessons', icon: ic(Video), tone: 'lilac', running: 'يختار الدروس', done: 'اختار الدروس', detail: '15 دقيقة يومياً', result: '5 دروس', duration: 900 },
+    { id: 'live', tool: 'book_live', icon: ic(CalendarDays), tone: 'coral', running: 'يحجز البث المباشر', done: 'حجز البث المباشر', result: 'الخميس', duration: 900 },
+  ],
+  sim: [
+    { id: 'scenario', tool: 'load_scenario', icon: ic(Bot), tone: 'sky', running: 'يجهّز السيناريو', done: 'جهّز السيناريو', detail: 'اعتراض السعر', result: 'تأمين', duration: 850 },
+    { id: 'run', tool: 'run_simulation', icon: ic(Radio), tone: 'lilac', running: 'يدير المحاكاة', done: 'أدار المحاكاة', detail: 'مع أحمد', result: '6 ردود', duration: 1000 },
+    { id: 'score', tool: 'score_call', icon: ic(Gauge), tone: 'green', running: 'يقيّم الأداء', done: 'قيّم الأداء', result: '82 من 100', duration: 800 },
+  ],
+  dash: [
+    { id: 'hours', tool: 'query_hours', icon: ic(Timer), tone: 'sky', running: 'يجمع ساعات التدريب', done: 'جمع ساعات التدريب', detail: 'آخر 30 يوماً', result: '74 ساعة', duration: 900 },
+    { id: 'rank', tool: 'rank_people', icon: ic(Activity), tone: 'lilac', running: 'يرتّب الموظفين', done: 'رتّب الموظفين', result: 'أعلى 5', duration: 800 },
+    { id: 'chart', tool: 'draw_chart', icon: ic(Gauge), tone: 'coral', running: 'يرسم المؤشر', done: 'رسم المؤشر', result: 'جاهز', duration: 700 },
+  ],
+}
+
+/** How long the answer stays readable after it appears. */
+const READ_MS = 5200
+/** All five runs take about the same time; use the longest so no answer is cut short. */
+const RUN_MS = Math.max(...Object.values(stepCalls).map(agentRunMs))
+
 export function DemoTable() {
   const { ref, paused, hoverProps } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.4 })
   const [pressed, setPressed] = useState(false)
   const { courses, live } = useDemoCourses(6)
-  // Snappier: quick typing, a short "analysing" beat, then the answer stays long
-  // enough for the charts to finish drawing.
+  // Scene = type the question → the agent's tasks stream in → fold → answer.
+  // Each scene lasts exactly as long as its tasks, plus time to read the answer.
   const demo = useDemoSequence(prompts, {
     paused,
     typeMs: 40,
     jitterMs: [26, 58],
-    workingMs: 380,
-    clearMs: 220,
-    showMs: 5600,
+    workingMs: 120,
+    clearMs: 260,
+    showMs: RUN_MS + READ_MS,
   })
   const current = heroDemoSteps[demo.step] ?? heroDemoSteps[0]
+  const sceneMs = Array.from(current.prompt).length * 42 + 380 + RUN_MS + READ_MS
 
   const jumpTo = (index: number) => {
     demo.goTo(index)
@@ -361,7 +400,7 @@ export function DemoTable() {
   }
 
   const isTyping = demo.phase === 'typing'
-  const isWorking = demo.phase === 'working'
+  const agentActive = demo.phase === 'working' || demo.phase === 'showing'
 
   // Phones: keep the active step scrolled into view inside the rail.
   const railRef = useRef<HTMLDivElement>(null)
@@ -398,7 +437,7 @@ export function DemoTable() {
                       transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                       aria-hidden="true"
                     >
-                      <span className="demo-rail__timer" key={demo.resultKey} />
+                      <span className="demo-rail__timer" key={demo.resultKey} style={{ animationDuration: `${sceneMs}ms` }} />
                     </motion.span>
                   ) : null}
                   <span className="demo-rail__icon">
@@ -431,48 +470,15 @@ export function DemoTable() {
         </div>
 
         <div className="demo__result demo__result--v2">
-          <div className="demo__status" aria-live="polite">
-            {isWorking ? (
-              <>
-                <span className="pulse" aria-hidden="true" />
-                جارٍ تحليل بيانات الفريق…
-              </>
-            ) : demo.resultVisible ? (
-              <>
-                <span className="demo__tag" aria-hidden="true">
-                  <AnimateIcon loop={ICON_LOOP} animateOnHover={false}>
-                    <AnimatedCheck size={11} />
-                  </AnimateIcon>{' '}
-                  تم
-                </span>
-                النتيجة جاهزة: {current.pill}
-              </>
-            ) : (
-              <>
-                <Keyboard size={13} aria-hidden="true" />
-                يكتب الطلب…
-              </>
-            )}
-            <Tag tone="soft" icon={<Info aria-hidden="true" />}>مثال توضيحي</Tag>
-          </div>
-
-          {demo.resultVisible ? (
-            <div className="demo__answer" key={demo.resultKey}>
-              <Result kind={current.kind} courses={courses} />
-            </div>
-          ) : (
-            <div className={isWorking ? 'demo__skeleton is-working' : 'demo__skeleton'} aria-hidden="true">
-              <Skeleton className="demo__skeleton-bar" />
-              <Skeleton className="demo__skeleton-bar" />
-              <Skeleton className="demo__skeleton-bar" />
-            </div>
-          )}
+          <AgentRun active={agentActive} runKey={demo.resultKey} calls={stepCalls[current.kind]}>
+            <Result kind={current.kind} courses={courses} />
+          </AgentRun>
         </div>
 
         <p className="demo__hint">
           <MousePointerClick size={12} aria-hidden="true" />
-          {live ? 'دورات حقيقية من مكتبة ماستري. ' : ''}
-          اضغط أي خطوة لتجربتها. يتوقف العرض تلقائياً عند خروجه من الشاشة.
+          {live ? 'دورات حقيقية من مكتبة ماستري · ' : ''}
+          مثال توضيحي · اضغط أي خطوة لتجربتها
         </p>
       </div>
     </div>

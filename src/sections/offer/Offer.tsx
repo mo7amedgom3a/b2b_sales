@@ -174,7 +174,7 @@ export function Offer() {
                       type="translate"
                       from="0 0"
                       to={curve.vertical ? `0 ${flow}` : `${-flow} 0`}
-                      dur="5s"
+                      dur="9s"
                       repeatCount="indefinite"
                     />
                   )}

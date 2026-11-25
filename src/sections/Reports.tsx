@@ -8,7 +8,6 @@ import {
   Gauge,
   Handshake,
   Info,
-  Keyboard,
   Lightbulb,
   Radar as RadarIcon,
   Route,
@@ -21,7 +20,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import {
   Bar,
   CartesianGrid,
@@ -42,7 +41,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { Skeleton } from '@/components/ui/skeleton'
+import type { ToolCallItem } from '@/components/kokonutui/ai-tool-calls'
 import { demoPeople, reports } from '../content/ar'
 import type { DemoPerson } from '../content/ar'
 import { useDemoSequence } from '../motion/useDemoSequence'
@@ -51,6 +50,7 @@ import { TypewriterChars } from '../motion/TypewriterText'
 import { Reveal } from '../motion/Reveal'
 import { Avatar } from '../ui/Avatar'
 import { SecHead } from '../ui/SecHead'
+import { AgentRun, agentRunMs } from '../ui/AgentRun'
 import { Tag } from '../ui/Tag'
 import { AnimateIcon, AnimatedAlert, AnimatedCheck } from '../ui/animated-icons'
 
@@ -278,6 +278,35 @@ function sceneLabel(scene: Scene) {
 
 const scenePrompts = reports.scenes.map((scene) => scene.prompt)
 
+/* ---------- The agent's tasks per question (shown instead of a loader) ---------- */
+const ic = (Icon: LucideIcon) => <Icon aria-hidden="true" />
+
+function viewCalls(scene: Scene): ToolCallItem[] {
+  if (scene.view === 'top') {
+    return [
+      { id: 'logs', tool: 'query_activity', icon: ic(Timer), tone: 'sky', running: 'يجمع سجلات التدريب', done: 'جمع سجلات التدريب', detail: 'هذا الشهر', result: '5 متدربين', duration: 900 },
+      { id: 'rank', tool: 'rank', icon: ic(Trophy), tone: 'lilac', running: 'يرتّب حسب النشاط', done: 'رتّب حسب النشاط', result: 'أحمد أولاً', duration: 800 },
+      { id: 'chart', tool: 'draw', icon: ic(BarChart3), tone: 'coral', running: 'يرسم المقارنة', done: 'رسم المقارنة', result: 'ساعات + إكمال', duration: 750 },
+    ]
+  }
+  if (scene.view === 'gaps') {
+    return [
+      { id: 'scores', tool: 'read_scores', icon: ic(Target), tone: 'sky', running: 'يقرأ نتائج المحاكاة', done: 'قرأ نتائج المحاكاة', detail: '5 مهارات', result: '48 نتيجة', duration: 900 },
+      { id: 'target', tool: 'compare_target', icon: ic(RadarIcon), tone: 'lilac', running: 'يقارن بالمستهدف', done: 'قارن بالمستهدف', detail: `${TARGET}%`, result: `${teamSkills.filter((s) => s.value < GAP_LINE).length} فجوات`, duration: 850 },
+      { id: 'next', tool: 'suggest', icon: ic(Lightbulb), tone: 'coral', running: 'يقترح الخطوة التالية', done: 'اقترح الخطوة التالية', result: 'مسار جاهز', duration: 750 },
+    ]
+  }
+  const person = demoPeople.find((item) => item.id === scene.personId) ?? demoPeople[0]
+  return [
+    { id: 'profile', tool: 'read_profile', icon: ic(UserRound), tone: 'sky', running: `يفتح ملف ${person.first}`, done: `فتح ملف ${person.first}`, detail: person.role, result: '5 مهارات', duration: 850 },
+    { id: 'team', tool: 'compare_team', icon: ic(RadarIcon), tone: 'lilac', running: 'يقارنه بالفريق', done: 'قارنه بالفريق', result: 'متوسط الفريق', duration: 850 },
+    { id: 'gap', tool: 'find_gap', icon: ic(TriangleAlert), tone: 'coral', running: 'يحدد أضعف جدارة', done: 'حدد أضعف جدارة', result: `${Math.min(...person.values)}%`, duration: 750 },
+  ]
+}
+
+const READ_MS = 5600
+const RUN_MS = Math.max(...reports.scenes.map((scene) => agentRunMs(viewCalls(scene))))
+
 export function Reports() {
   const reduce = useReducedMotion()
   const { ref, paused, hoverProps } = useInViewAutoplay<HTMLDivElement>({ threshold: 0.25 })
@@ -286,9 +315,9 @@ export function Reports() {
     paused,
     typeMs: 40,
     jitterMs: [26, 58],
-    workingMs: 380,
-    clearMs: 220,
-    showMs: 6200,
+    workingMs: 120,
+    clearMs: 260,
+    showMs: RUN_MS + READ_MS,
   })
   const scene = reports.scenes[demo.step] ?? reports.scenes[0]
   const person = scene.view === 'profile' ? demoPeople.find((item) => item.id === scene.personId) : undefined
@@ -326,7 +355,7 @@ export function Reports() {
                               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                               aria-hidden="true"
                             >
-                              <span className="demo-rail__timer" key={demo.resultKey} />
+                              <span className="demo-rail__timer" key={demo.resultKey} style={{ animationDuration: `${Array.from(scene.prompt).length * 42 + 380 + RUN_MS + READ_MS}ms` }} />
                             </motion.span>
                           ) : null}
                           <span className="demo-rail__icon">
@@ -368,44 +397,13 @@ export function Reports() {
                 </div>
 
                 <div className="rep-stage">
-                  <AnimatePresence mode="wait" initial={false}>
-                    {demo.resultVisible ? (
-                      <motion.div
-                        key={demo.resultKey}
-                        initial={reduce ? false : { opacity: 0, y: 14, filter: 'blur(4px)' }}
-                        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-                        exit={reduce ? undefined : { opacity: 0, y: -10, filter: 'blur(4px)' }}
-                        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                      >
-                        <SceneView scene={scene} />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="loading"
-                        className="rep-loading"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                        aria-hidden="true"
-                      >
-                        <span className="rep-loading__label">
-                          {demo.phase === 'working' ? (
-                            <>
-                              <span className="pulse" /> جارٍ تحليل بيانات الفريق…
-                            </>
-                          ) : (
-                            <>
-                              <Keyboard /> يكتب السؤال…
-                            </>
-                          )}
-                        </span>
-                        <Skeleton className="rep-loading__bar" />
-                        <Skeleton className="rep-loading__bar" />
-                        <Skeleton className="rep-loading__bar" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  <AgentRun
+                    active={demo.phase === 'working' || demo.phase === 'showing'}
+                    runKey={demo.resultKey}
+                    calls={viewCalls(scene)}
+                  >
+                    <SceneView scene={scene} />
+                  </AgentRun>
                 </div>
 
                 <p className="rep-note">

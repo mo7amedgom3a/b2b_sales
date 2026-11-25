@@ -11,6 +11,12 @@ export type TrainerCard = {
   courses?: number
   diplomas?: number
   live: boolean
+  /** Static expert-profile extras, shown on the founder cards and the video intro. */
+  founder?: boolean
+  title?: string
+  bio?: string
+  focus?: string[]
+  profile?: string
 }
 
 function normalize(name: string): string {
@@ -37,11 +43,16 @@ export function mergeTrainers(api: ApiExpert[]): TrainerCard[] {
       role: person.role,
       initial: person.initial,
       tone: person.tone,
-      photo: match?.avatar ?? ('photo' in person ? person.photo : undefined),
+      photo: match?.avatar ?? person.photo,
       category: match?.categories?.[0],
       courses: match?.course_count,
       diplomas: match?.diploma_count,
       live: Boolean(match),
+      founder: person.founder,
+      title: person.title,
+      bio: person.bio,
+      focus: person.focus,
+      profile: person.profile,
     }
   })
 }
